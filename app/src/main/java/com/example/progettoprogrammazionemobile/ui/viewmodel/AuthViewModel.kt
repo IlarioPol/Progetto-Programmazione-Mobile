@@ -3,11 +3,13 @@ package com.example.progettoprogrammazionemobile.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
+import com.example.progettoprogrammazionemobile.data.model.User
+import com.example.progettoprogrammazionemobile.data.model.UserRole
 
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
-    object Success : AuthState()
+    data class Success(val user: User) : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
@@ -22,15 +24,18 @@ class AuthViewModel : ViewModel() {
         }
         
         _authState.value = AuthState.Loading
-        // Mock login logic
-        if (email == "test@example.com" && password == "password") {
-            _authState.value = AuthState.Success
+        
+        // Mock logic per differenziare i ruoli nei test
+        if (email == "cliente@test.com" && password == "password") {
+            _authState.value = AuthState.Success(User("1", "Mario Rossi", email, UserRole.CLIENT))
+        } else if (email == "provider@test.com" && password == "password") {
+            _authState.value = AuthState.Success(User("2", "Centro Servizi", email, UserRole.PROVIDER))
         } else {
             _authState.value = AuthState.Error("Credenziali non valide")
         }
     }
 
-    fun register(name: String, email: String, password: String, confirmPassword: String) {
+    fun register(name: String, email: String, password: String, confirmPassword: String, role: UserRole) {
         if (name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
             _authState.value = AuthState.Error("Per favore compila tutti i campi")
             return
@@ -41,8 +46,8 @@ class AuthViewModel : ViewModel() {
         }
         
         _authState.value = AuthState.Loading
-        // Mock registration logic
-        _authState.value = AuthState.Success
+        // Simulazione registrazione con ruolo scelto
+        _authState.value = AuthState.Success(User("3", name, email, role))
     }
     
     fun resetState() {
