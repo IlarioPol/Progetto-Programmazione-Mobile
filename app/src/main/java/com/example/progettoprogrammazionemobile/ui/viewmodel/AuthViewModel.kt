@@ -13,6 +13,7 @@ sealed class AuthState {
     object Loading : AuthState()
     object VerificationEmailSent : AuthState()
     object PasswordResetSent : AuthState()
+    object PasswordUpdated : AuthState()
     data class Success(val user: User) : AuthState()
     data class Error(val message: String) : AuthState()
 }
@@ -114,6 +115,23 @@ class AuthViewModel : ViewModel() {
             }
             .addOnFailureListener { exception ->
                 _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore nell'invio dell'email di reset")
+            }
+    }
+
+    fun updatePassword(newPassword: String) {
+        if (newPassword.isBlank() || newPassword.length < 6) {
+            _authState.value = AuthState.Error("La password deve essere di almeno 6 caratteri")
+            return
+        }
+
+        _authState.value = AuthState.Loading
+        val user = auth.currentUser
+        user?.updatePassword(newPassword)
+            ?.addOnSuccessListener {
+                _authState.value = AuthState.PasswordUpdated
+            }
+            ?.addOnFailureListener { exception ->
+                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore nell'aggiornamento della password. Potrebbe essere necessario rieffettuare il login.")
             }
     }
 
