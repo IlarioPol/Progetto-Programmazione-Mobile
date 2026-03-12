@@ -83,4 +83,3 @@ L'app utilizza credenziali "mock" (simulate) per dimostrare i diversi flussi:
 - **Navigation Compose**: Routing interno all'app.
 
 ---
-Sviluppato da [Ilario Polidori](https://github.com/IlarioPol)
