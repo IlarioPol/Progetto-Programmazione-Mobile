@@ -76,7 +76,14 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("profile") {
-                            ProfileScreen(onBack = { navController.popBackStack() })
+                            ProfileScreen(
+                                onBack = { navController.popBackStack() },
+                                onAccountDeleted = {
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            )
                         }
                     }
                 }
