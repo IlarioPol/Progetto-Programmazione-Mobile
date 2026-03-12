@@ -1,0 +1,10 @@
+package com.example.progettoprogrammazionemobile.data.model
+
+data class Booking(
+    val id: String,
+    val serviceId: String,
+    val serviceName: String,
+    val clientId: String,
+    val date: String,
+    val status: String // e.g., "Confirmed", "Pending", "Completed"
+)
