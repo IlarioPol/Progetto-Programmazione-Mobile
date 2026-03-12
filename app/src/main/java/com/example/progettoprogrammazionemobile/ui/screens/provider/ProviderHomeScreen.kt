@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
@@ -18,13 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 import com.example.progettoprogrammazionemobile.ui.viewmodel.ProviderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProviderHomeScreen(
     onLogout: () -> Unit,
-    viewModel: ProviderViewModel = viewModel()
+    onProfileClick: () -> Unit,
+    providerViewModel: ProviderViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
@@ -34,7 +38,13 @@ fun ProviderHomeScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Dashboard Emettitore") },
                 actions = {
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = onProfileClick) {
+                        Icon(Icons.Default.AccountCircle, contentDescription = "Profilo")
+                    }
+                    IconButton(onClick = {
+                        authViewModel.logout()
+                        onLogout()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout")
                     }
                 }
@@ -72,9 +82,9 @@ fun ProviderHomeScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                0 -> ServicesListTab(viewModel)
-                1 -> ReviewsListTab(viewModel)
-                2 -> StatisticsTab(viewModel)
+                0 -> ServicesListTab(providerViewModel)
+                1 -> ReviewsListTab(providerViewModel)
+                2 -> StatisticsTab(providerViewModel)
             }
         }
     }
@@ -83,7 +93,7 @@ fun ProviderHomeScreen(
         AddServiceDialog(
             onDismiss = { showAddDialog = false },
             onConfirm = { name, desc, dur, price ->
-                viewModel.addService(name, desc, dur, price)
+                providerViewModel.addService(name, desc, dur, price)
                 showAddDialog = false
             }
         )
