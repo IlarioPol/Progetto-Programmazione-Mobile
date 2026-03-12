@@ -26,12 +26,16 @@ class AuthViewModel : ViewModel() {
         _authState.value = AuthState.Loading
         
         // Mock logic per differenziare i ruoli nei test
-        if (email == "cliente@test.com" && password == "password") {
-            _authState.value = AuthState.Success(User("1", "Mario Rossi", email, UserRole.CLIENT))
-        } else if (email == "provider@test.com" && password == "password") {
-            _authState.value = AuthState.Success(User("2", "Centro Servizi", email, UserRole.PROVIDER))
-        } else {
-            _authState.value = AuthState.Error("Credenziali non valide")
+        when (email) {
+            "cliente@test.com" if password == "password" -> {
+                _authState.value = AuthState.Success(User("1", "Mario Rossi", email, UserRole.CLIENT))
+            }
+            "provider@test.com" if password == "password" -> {
+                _authState.value = AuthState.Success(User("2", "Centro Servizi", email, UserRole.PROVIDER))
+            }
+            else -> {
+                _authState.value = AuthState.Error("Credenziali non valide")
+            }
         }
     }
 
