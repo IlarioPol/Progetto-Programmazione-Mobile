@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -25,6 +26,7 @@ import com.example.progettoprogrammazionemobile.ui.viewmodel.ClientViewModel
 @Composable
 fun ClientHomeScreen(
     onLogout: () -> Unit,
+    onProfileClick: () -> Unit,
     clientViewModel: ClientViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
@@ -37,6 +39,9 @@ fun ClientHomeScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Area Cliente") },
                 actions = {
+                    IconButton(onClick = onProfileClick) {
+                        Icon(Icons.Default.AccountCircle, contentDescription = "Profilo")
+                    }
                     IconButton(onClick = {
                         authViewModel.logout()
                         onLogout()

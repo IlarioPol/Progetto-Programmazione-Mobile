@@ -15,6 +15,7 @@ import com.example.progettoprogrammazionemobile.data.model.UserRole
 import com.example.progettoprogrammazionemobile.ui.screens.auth.LoginScreen
 import com.example.progettoprogrammazionemobile.ui.screens.auth.RegisterScreen
 import com.example.progettoprogrammazionemobile.ui.screens.client.ClientHomeScreen
+import com.example.progettoprogrammazionemobile.ui.screens.profile.ProfileScreen
 import com.example.progettoprogrammazionemobile.ui.screens.provider.ProviderHomeScreen
 import com.example.progettoprogrammazionemobile.ui.theme.ProgettoProgrammazioneMobileTheme
 
@@ -55,18 +56,34 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("client_home") {
-                            ClientHomeScreen(onLogout = {
-                                navController.navigate("login") {
-                                    popUpTo(0)
-                                }
-                            })
+                            ClientHomeScreen(
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo(0)
+                                    }
+                                },
+                                onProfileClick = { navController.navigate("profile") }
+                            )
                         }
                         composable("provider_home") {
-                            ProviderHomeScreen(onLogout = {
-                                navController.navigate("login") {
-                                    popUpTo(0)
+                            ProviderHomeScreen(
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo(0)
+                                    }
+                                },
+                                onProfileClick = { navController.navigate("profile") }
+                            )
+                        }
+                        composable("profile") {
+                            ProfileScreen(
+                                onBack = { navController.popBackStack() },
+                                onAccountDeleted = {
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
                                 }
-                            })
+                            )
                         }
                     }
                 }

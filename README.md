@@ -23,9 +23,9 @@ Benvenuto nel repository di **Progetto Programmazione Mobile**. Questa applicazi
 | **Autenticazione**   | Integrazione Firebase Auth | Collegare il sistema di registrazio/login reale a Firebase.     |   ✅   |
 | **Autenticazione**   | Email di Verifica          | Inviare email di attivazione per la registrazione.              |   ✅   |
 | **Gestione Profilo** | Logout                     | fare il logout una volta entrati con il proprio account         |   ✅   |
-| **Autenticazione**   | Recupero Password          | Funzionalità "Password Dimenticata" via email.                  |   ✅    |
-| **Gestione Profilo** | Modifica Password          | Permettere all'utente di cambiare password dall'area riservata. |   ⏳   |
-| **Gestione Profilo** | Eliminazione Account       | Opzione per cancellare definitivamente il proprio profilo.      |   ⏳   |
+| **Autenticazione**   | Recupero Password          | Funzionalità "Password Dimenticata" via email.                  |   ✅   |
+| **Gestione Profilo** | Modifica Password          | Permettere all'utente di cambiare password dall'area riservata. |   ✅   |
+| **Gestione Profilo** | Eliminazione Account       | Opzione per cancellare definitivamente il proprio profilo.      |   ✅    |
 | **Gestione Profilo** | Aggiornamento Dati         | Modifica di nome, foto profilo e contatti.                      |   ⏳   |
 
 ## 📋 Tabella Booking & Flussi (Prenotazioni)

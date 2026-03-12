@@ -13,6 +13,8 @@ sealed class AuthState {
     object Loading : AuthState()
     object VerificationEmailSent : AuthState()
     object PasswordResetSent : AuthState()
+    object PasswordUpdated : AuthState()
+    object AccountDeleted : AuthState()
     data class Success(val user: User) : AuthState()
     data class Error(val message: String) : AuthState()
 }
@@ -115,6 +117,47 @@ class AuthViewModel : ViewModel() {
             .addOnFailureListener { exception ->
                 _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore nell'invio dell'email di reset")
             }
+    }
+
+    fun updatePassword(newPassword: String) {
+        if (newPassword.isBlank() || newPassword.length < 6) {
+            _authState.value = AuthState.Error("La password deve essere di almeno 6 caratteri")
+            return
+        }
+
+        _authState.value = AuthState.Loading
+        val user = auth.currentUser
+        user?.updatePassword(newPassword)
+            ?.addOnSuccessListener {
+                _authState.value = AuthState.PasswordUpdated
+            }
+            ?.addOnFailureListener { exception ->
+                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore nell'aggiornamento della password. Potrebbe essere necessario rieffettuare il login.")
+            }
+    }
+
+    fun deleteAccount() {
+        _authState.value = AuthState.Loading
+        val user = auth.currentUser
+        val userId = user?.uid
+
+        if (userId != null) {
+            // 1. Elimina i dati da Firestore
+            db.collection("users").document(userId).delete()
+                .addOnSuccessListener {
+                    // 2. Elimina l'utente da Firebase Auth
+                    user.delete()
+                        .addOnSuccessListener {
+                            _authState.value = AuthState.AccountDeleted
+                        }
+                        .addOnFailureListener { exception ->
+                            _authState.value = AuthState.Error("Errore nell'eliminazione dell'account: ${exception.localizedMessage}. Prova a rieffettuare il login.")
+                        }
+                }
+                .addOnFailureListener { exception ->
+                    _authState.value = AuthState.Error("Errore nell'eliminazione dei dati: ${exception.localizedMessage}")
+                }
+        }
     }
 
     private fun fetchUserData(uid: String) {
