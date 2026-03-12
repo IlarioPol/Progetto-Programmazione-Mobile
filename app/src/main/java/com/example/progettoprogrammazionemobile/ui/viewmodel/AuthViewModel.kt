@@ -12,6 +12,7 @@ sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
     object VerificationEmailSent : AuthState()
+    object PasswordResetSent : AuthState()
     data class Success(val user: User) : AuthState()
     data class Error(val message: String) : AuthState()
 }
@@ -97,6 +98,22 @@ class AuthViewModel : ViewModel() {
             }
             .addOnFailureListener { exception ->
                 _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore durante la registrazione")
+            }
+    }
+
+    fun resetPassword(email: String) {
+        if (email.isBlank()) {
+            _authState.value = AuthState.Error("Per favore inserisci la tua email")
+            return
+        }
+
+        _authState.value = AuthState.Loading
+        auth.sendPasswordResetEmail(email)
+            .addOnSuccessListener {
+                _authState.value = AuthState.PasswordResetSent
+            }
+            .addOnFailureListener { exception ->
+                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore nell'invio dell'email di reset")
             }
     }
 
