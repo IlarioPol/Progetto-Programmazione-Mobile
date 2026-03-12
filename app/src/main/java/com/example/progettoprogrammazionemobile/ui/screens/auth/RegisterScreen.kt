@@ -1,6 +1,7 @@
-package com.example.progettoprogrammazionemobile.ui.screens
+package com.example.progettoprogrammazionemobile.ui.screens.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -10,12 +11,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.progettoprogrammazionemobile.data.model.UserRole
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthState
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit,
+    onRegisterSuccess: (UserRole) -> Unit,
     onLoginClick: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
@@ -23,13 +25,39 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf(UserRole.CLIENT) }
+    var showVerificationMessage by remember { mutableStateOf(false) }
+    
     val authState by viewModel.authState
 
     LaunchedEffect(authState) {
-        if (authState is AuthState.Success) {
-            onRegisterSuccess()
-            viewModel.resetState()
+        when (authState) {
+            is AuthState.Success -> {
+                onRegisterSuccess((authState as AuthState.Success).user.role)
+                viewModel.resetState()
+            }
+            is AuthState.VerificationEmailSent -> {
+                showVerificationMessage = true
+            }
+            else -> {}
         }
+    }
+
+    if (showVerificationMessage) {
+        AlertDialog(
+            onDismissRequest = { /* Don't dismiss by clicking outside */ },
+            title = { Text("Verifica Email") },
+            text = { Text("Ti abbiamo inviato un'email di verifica a $email. Per favore controlla la tua posta e clicca sul link prima di accedere.") },
+            confirmButton = {
+                Button(onClick = {
+                    showVerificationMessage = false
+                    viewModel.resetState()
+                    onLoginClick()
+                }) {
+                    Text("Vai al Login")
+                }
+            }
+        )
     }
 
     Column(
@@ -40,7 +68,7 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(text = "Registrazione", fontSize = 32.sp, style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = name,
@@ -48,7 +76,7 @@ fun RegisterScreen(
             label = { Text("Nome Completo") },
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = email,
@@ -56,7 +84,7 @@ fun RegisterScreen(
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = password,
@@ -65,7 +93,7 @@ fun RegisterScreen(
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = confirmPassword,
@@ -74,7 +102,28 @@ fun RegisterScreen(
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Iscriviti come:", style = MaterialTheme.typography.titleMedium)
+        Row(Modifier.selectableGroup()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = selectedRole == UserRole.CLIENT,
+                    onClick = { selectedRole = UserRole.CLIENT }
+                )
+                Text("Cliente", modifier = Modifier.padding(start = 8.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = selectedRole == UserRole.PROVIDER,
+                    onClick = { selectedRole = UserRole.PROVIDER }
+                )
+                Text("Emettitore Servizi", modifier = Modifier.padding(start = 8.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         if (authState is AuthState.Error) {
             Text(
@@ -88,7 +137,7 @@ fun RegisterScreen(
             CircularProgressIndicator()
         } else {
             Button(
-                onClick = { viewModel.register(name, email, password, confirmPassword) },
+                onClick = { viewModel.register(name, email, password, confirmPassword, selectedRole) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Registrati")
