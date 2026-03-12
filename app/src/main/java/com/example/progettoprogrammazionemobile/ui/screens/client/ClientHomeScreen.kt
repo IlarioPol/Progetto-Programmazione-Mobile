@@ -18,13 +18,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.progettoprogrammazionemobile.data.model.Service
+import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 import com.example.progettoprogrammazionemobile.ui.viewmodel.ClientViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientHomeScreen(
     onLogout: () -> Unit,
-    viewModel: ClientViewModel = viewModel()
+    clientViewModel: ClientViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var selectedServiceForBooking by remember { mutableStateOf<Service?>(null) }
@@ -35,7 +37,10 @@ fun ClientHomeScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Area Cliente") },
                 actions = {
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = {
+                        authViewModel.logout()
+                        onLogout()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout")
                     }
                 }
@@ -60,8 +65,8 @@ fun ClientHomeScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                0 -> ExploreServicesTab(viewModel) { selectedServiceForBooking = it }
-                1 -> MyBookingsTab(viewModel) { selectedServiceForReview = it }
+                0 -> ExploreServicesTab(clientViewModel) { selectedServiceForBooking = it }
+                1 -> MyBookingsTab(clientViewModel) { selectedServiceForReview = it }
             }
         }
     }
@@ -71,7 +76,7 @@ fun ClientHomeScreen(
             serviceName = service.name,
             onDismiss = { selectedServiceForBooking = null },
             onConfirm = { date ->
-                viewModel.bookService(service, date)
+                clientViewModel.bookService(service, date)
                 selectedServiceForBooking = null
             }
         )
@@ -82,7 +87,7 @@ fun ClientHomeScreen(
             serviceName = serviceName,
             onDismiss = { selectedServiceForReview = null },
             onConfirm = { rating, comment ->
-                viewModel.addReview("id", serviceName, rating, comment)
+                clientViewModel.addReview("id", serviceName, rating, comment)
                 selectedServiceForReview = null
             }
         )
