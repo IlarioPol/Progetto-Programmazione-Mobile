@@ -26,14 +26,38 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(UserRole.CLIENT) }
+    var showVerificationMessage by remember { mutableStateOf(false) }
     
     val authState by viewModel.authState
 
     LaunchedEffect(authState) {
-        if (authState is AuthState.Success) {
-            onRegisterSuccess((authState as AuthState.Success).user.role)
-            viewModel.resetState()
+        when (authState) {
+            is AuthState.Success -> {
+                onRegisterSuccess((authState as AuthState.Success).user.role)
+                viewModel.resetState()
+            }
+            is AuthState.VerificationEmailSent -> {
+                showVerificationMessage = true
+            }
+            else -> {}
         }
+    }
+
+    if (showVerificationMessage) {
+        AlertDialog(
+            onDismissRequest = { /* Don't dismiss by clicking outside */ },
+            title = { Text("Verifica Email") },
+            text = { Text("Ti abbiamo inviato un'email di verifica a $email. Per favore controlla la tua posta e clicca sul link prima di accedere.") },
+            confirmButton = {
+                Button(onClick = {
+                    showVerificationMessage = false
+                    viewModel.resetState()
+                    onLoginClick()
+                }) {
+                    Text("Vai al Login")
+                }
+            }
+        )
     }
 
     Column(

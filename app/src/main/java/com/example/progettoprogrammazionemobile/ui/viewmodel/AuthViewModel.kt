@@ -5,17 +5,40 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import com.example.progettoprogrammazionemobile.data.model.User
 import com.example.progettoprogrammazionemobile.data.model.UserRole
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
+    object VerificationEmailSent : AuthState()
     data class Success(val user: User) : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
 class AuthViewModel : ViewModel() {
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+
     private val _authState = mutableStateOf<AuthState>(AuthState.Idle)
     val authState: State<AuthState> = _authState
+
+    init {
+        checkCurrentUser()
+    }
+
+    fun checkCurrentUser() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            currentUser.reload().addOnCompleteListener {
+                if (currentUser.isEmailVerified) {
+                    fetchUserData(currentUser.uid)
+                } else {
+                    _authState.value = AuthState.Error("Per favore verifica la tua email")
+                }
+            }
+        }
+    }
 
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
@@ -25,18 +48,19 @@ class AuthViewModel : ViewModel() {
         
         _authState.value = AuthState.Loading
         
-        // Mock logic per differenziare i ruoli nei test
-        when (email) {
-            "cliente@test.com" if password == "password" -> {
-                _authState.value = AuthState.Success(User("1", "Mario Rossi", email, UserRole.CLIENT))
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnSuccessListener { result ->
+                val user = result.user
+                if (user != null && user.isEmailVerified) {
+                    fetchUserData(user.uid)
+                } else if (user != null) {
+                    _authState.value = AuthState.Error("Email non verificata. Controlla la tua posta.")
+                    user.sendEmailVerification()
+                }
             }
-            "provider@test.com" if password == "password" -> {
-                _authState.value = AuthState.Success(User("2", "Centro Servizi", email, UserRole.PROVIDER))
+            .addOnFailureListener { exception ->
+                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore durante il login")
             }
-            else -> {
-                _authState.value = AuthState.Error("Credenziali non valide")
-            }
-        }
     }
 
     fun register(name: String, email: String, password: String, confirmPassword: String, role: UserRole) {
@@ -50,8 +74,51 @@ class AuthViewModel : ViewModel() {
         }
         
         _authState.value = AuthState.Loading
-        // Simulazione registrazione con ruolo scelto
-        _authState.value = AuthState.Success(User("3", name, email, role))
+        
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { result ->
+                val firebaseUser = result.user
+                firebaseUser?.sendEmailVerification()
+                    ?.addOnSuccessListener {
+                        val userId = firebaseUser.uid
+                        val user = User(userId, name, email, role)
+                        
+                        db.collection("users").document(userId).set(user)
+                            .addOnSuccessListener {
+                                _authState.value = AuthState.VerificationEmailSent
+                            }
+                            .addOnFailureListener { exception ->
+                                _authState.value = AuthState.Error("Errore nel salvataggio dei dati: ${exception.localizedMessage}")
+                            }
+                    }
+                    ?.addOnFailureListener { exception ->
+                        _authState.value = AuthState.Error("Errore nell'invio dell'email di verifica: ${exception.localizedMessage}")
+                    }
+            }
+            .addOnFailureListener { exception ->
+                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore durante la registrazione")
+            }
+    }
+
+    private fun fetchUserData(uid: String) {
+        _authState.value = AuthState.Loading
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { document ->
+                val user = document.toObject(User::class.java)
+                if (user != null) {
+                    _authState.value = AuthState.Success(user)
+                } else {
+                    _authState.value = AuthState.Error("Dati utente non trovati")
+                }
+            }
+            .addOnFailureListener { exception ->
+                _authState.value = AuthState.Error("Errore nel recupero dati: ${exception.localizedMessage}")
+            }
+    }
+
+    fun logout() {
+        auth.signOut()
+        _authState.value = AuthState.Idle
     }
     
     fun resetState() {
