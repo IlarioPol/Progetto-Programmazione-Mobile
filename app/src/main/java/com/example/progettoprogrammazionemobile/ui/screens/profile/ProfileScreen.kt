@@ -1,8 +1,10 @@
 package com.example.progettoprogrammazionemobile.ui.screens.profile
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,19 +22,27 @@ import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
+    onAccountDeleted: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var showSuccessDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     val authState by viewModel.authState
     val user = (authState as? AuthState.Success)?.user
 
     LaunchedEffect(authState) {
-        if (authState is AuthState.PasswordUpdated) {
-            showSuccessDialog = true
-            viewModel.resetState()
+        when (authState) {
+            is AuthState.PasswordUpdated -> {
+                showSuccessDialog = true
+                viewModel.resetState()
+            }
+            is AuthState.AccountDeleted -> {
+                onAccountDeleted()
+            }
+            else -> {}
         }
     }
 
@@ -47,6 +57,30 @@ fun ProfileScreen(
                     onBack()
                 }) {
                     Text("OK")
+                }
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Elimina Account") },
+            text = { Text("Sei sicuro di voler eliminare definitivamente il tuo account? Questa azione non può essere annullata.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteAccount()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Elimina")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Annulla")
                 }
             }
         )
@@ -131,6 +165,22 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Salva Nuova Password")
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Pulsante Eliminazione Account
+                OutlinedButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Elimina Account Definitivamente")
                 }
             }
         }
