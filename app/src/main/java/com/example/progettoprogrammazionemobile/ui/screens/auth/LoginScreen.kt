@@ -22,13 +22,54 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showResetDialog by remember { mutableStateOf(false) }
+    var resetEmail by remember { mutableStateOf("") }
+    var successMessage by remember { mutableStateOf<String?>(null) }
+    
     val authState by viewModel.authState
 
     LaunchedEffect(authState) {
-        if (authState is AuthState.Success) {
-            onLoginSuccess((authState as AuthState.Success).user.role)
-            viewModel.resetState()
+        when (authState) {
+            is AuthState.Success -> {
+                onLoginSuccess((authState as AuthState.Success).user.role)
+                viewModel.resetState()
+            }
+            is AuthState.PasswordResetSent -> {
+                successMessage = "Email di reset inviata! Controlla la tua posta."
+                showResetDialog = false
+                viewModel.resetState()
+            }
+            else -> {}
         }
+    }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = { Text("Recupero Password") },
+            text = {
+                Column {
+                    Text("Inserisci la tua email per ricevere il link di reset:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = resetEmail,
+                        onValueChange = { resetEmail = it },
+                        label = { Text("Email") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.resetPassword(resetEmail) }) {
+                    Text("Invia")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text("Annulla")
+                }
+            }
+        )
     }
 
     Column(
@@ -58,7 +99,29 @@ fun LoginScreen(
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            TextButton(onClick = { 
+                resetEmail = email
+                showResetDialog = true 
+            }) {
+                Text("Password dimenticata?")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (successMessage != null) {
+            Text(
+                text = successMessage!!,
+                color = Color(0xFF4CAF50),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            // Reset success message after some time or interaction
+        }
 
         if (authState is AuthState.Error) {
             Text(
@@ -72,7 +135,10 @@ fun LoginScreen(
             CircularProgressIndicator()
         } else {
             Button(
-                onClick = { viewModel.login(email, password) },
+                onClick = { 
+                    successMessage = null
+                    viewModel.login(email, password) 
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Accedi")
@@ -82,12 +148,5 @@ fun LoginScreen(
         TextButton(onClick = onRegisterClick) {
             Text("Non hai un account? Registrati")
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Demo: cliente@test.com o provider@test.com",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
-        )
     }
 }
