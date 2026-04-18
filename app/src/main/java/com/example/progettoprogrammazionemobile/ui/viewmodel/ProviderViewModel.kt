@@ -48,35 +48,12 @@ class ProviderViewModel : ViewModel() {
                             _services.add(service)
                         }
                     }
-                    // Una volta caricati i servizi, aggiorna il filtro delle prenotazioni
-                    refreshBookingsFilter()
+                    fetchIncomingBookings()
                 }
             }
     }
 
     private fun fetchIncomingBookings() {
-        db.collection("bookings")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) return@addSnapshotListener
-                
-                if (snapshot != null) {
-                    refreshBookingsFilter(snapshot.documents.mapNotNull { it.toObject(Booking::class.java) })
-                }
-            }
-    }
-
-    private fun refreshBookingsFilter(allBookings: List<Booking>? = null) {
-        val bookingsToFilter = allBookings ?: return // Implementazione semplificata per il listener
-        
-        // Carichiamo tutte le prenotazioni e filtriamo per quelle che appartengono ai servizi di QUESTO provider
-        val myServiceIds = _services.map { it.id }
-        
-        _incomingBookings.clear()
-        _incomingBookings.addAll(bookingsToFilter.filter { myServiceIds.contains(it.serviceId) })
-    }
-
-    // Sovraccarico per gestire l'aggiornamento automatico
-    private fun fetchIncomingBookingsReal() {
         val providerId = auth.currentUser?.uid ?: return
         
         db.collection("bookings")
@@ -89,6 +66,7 @@ class ProviderViewModel : ViewModel() {
                     
                     _incomingBookings.clear()
                     _incomingBookings.addAll(allBookings.filter { myServiceIds.contains(it.serviceId) })
+                    calculateStats()
                 }
             }
     }
@@ -97,7 +75,9 @@ class ProviderViewModel : ViewModel() {
         db.collection("bookings").document(bookingId)
             .update("status", newStatus)
             .addOnSuccessListener {
-                // Il listener ricaricherà i dati
+                if (newStatus == "Completed") {
+                    calculateStats()
+                }
             }
     }
 
@@ -115,5 +95,19 @@ class ProviderViewModel : ViewModel() {
         )
         
         db.collection("services").document(serviceId).set(newService)
+    }
+
+    private fun calculateStats() {
+        var total = 0.0
+        // Calcola il fatturato basato sulle prenotazioni completate
+        val completedBookings = _incomingBookings.filter { it.status == "Completed" }
+        
+        for (booking in completedBookings) {
+            val service = _services.find { it.id == booking.serviceId }
+            if (service != null) {
+                total += service.price
+            }
+        }
+        _totalTurnover.value = total
     }
 }
