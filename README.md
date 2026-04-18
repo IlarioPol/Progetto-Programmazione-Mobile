@@ -15,7 +15,7 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 
 ## 📈 Roadmap di Sviluppo
 
-### 1. Sistema di Autenticazione & Sicurezza
+### 🔐 1. Autenticazione & Sicurezza
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
 | **Integrazione Firebase** | Collegamento reale a Firebase Auth e Firestore. | ✅ |
@@ -23,9 +23,9 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 | **Recupero Password** | Reset della password tramite link via email. | ✅ |
 | **Gestione Sessione** | Logout sicuro e persistenza dell'utente all'avvio. | ✅ |
 | **Sicurezza Profilo** | Modifica password dall'area riservata. | ✅ |
-| **Cancellazione Dati** | Eliminazione definitiva account e dati personali (GDPR compliance). | ✅ |
+| **Cancellazione Dati** | Eliminazione definitiva account e dati personali. | ✅ |
 
-### 2. Struttura Gerarchica (B2B Management)
+### 👑 2. Struttura Gerarchica (B2B Management)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
 | **Ruoli Multipli** | Gestione accessi per Cliente, Provider e Manager. | ✅ |
@@ -33,33 +33,40 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 | **Accettazione Inviti** | Dialog automatico lato Provider per accettare la supervisione. | ✅ |
 | **Binding Manager-User** | Collegamento logico nel DB tra dipendente e supervisore. | ✅ |
 
-### 3. Core Business (Prenotazioni & Servizi) ⏳ *In Sviluppo*
-| Area | Task | Descrizione | Stato |
+### 📅 3. Flusso Prenotazioni (Booking Flow)
+| Fase | Attore | Descrizione | Stato |
 | :--- | :--- | :--- | :---: |
-| **Provider** | Creazione Servizi | Pubblicazione di servizi (nome, prezzo, durata) su Firestore. | ⏳ |
-| **Cliente** | Esplorazione | Visualizzazione dei servizi reali caricati dai Provider. | ⏳ |
-| **Booking** | Flusso Richiesta | Invio richiesta di prenotazione (Pending -> Confermato). | ⏳ |
-| **Calendar** | Agenda | Visualizzazione degli impegni confermati in formato lista/calendario. | ⏳ |
-| **Feedback** | Recensioni | Sistema di valutazione (1-5 stelle) e commenti per i servizi conclusi. | ⏳ |
+| **Richiesta** | Cliente | Selezione servizio e invio proposta data/ora (Stato: *Pending*). | ⏳ |
+| **Notifica** | Provider | Ricezione avviso per nuova prenotazione in attesa. | ⏳ |
+| **Approvazione** | Provider | Accettazione della richiesta (Stato: *Confirmed*). | ⏳ |
+| **Rifiuto** | Provider | Rifiuto della richiesta con eventuale nota (Stato: *Rejected*). | ⏳ |
+| **Completamento** | Provider | Chiusura dell'appuntamento eseguito (Stato: *Completed*). | ⏳ |
+| **Cancellazione** | Entrambi | Possibilità di annullare un impegno prima della data prevista. | ⏳ |
 
----
+### 🛠️ 4. Funzionalità per Ruolo
 
-## 📱 Dashboards per Ruolo
+#### 👤 Cliente (User)
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Esplorazione** | Ricerca e filtri sui servizi caricati dai Provider. | ⏳ |
+| **Tracking** | Monitoraggio dello stato delle proprie richieste (Pending/Confirmed). | ⏳ |
+| **Agenda Personale** | Vista dei prossimi appuntamenti confermati. | ⏳ |
+| **Recensioni** | Sistema di valutazione (1-5 stelle) e commenti post-servizio. | ⏳ |
 
-### 👤 Cliente (User)
-- Esplora i servizi disponibili.
-- Gestisce le proprie prenotazioni e lo storico.
-- Lascia recensioni ai professionisti.
+#### 💼 Emettitore (Provider)
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Catalogo Servizi** | Creazione e modifica servizi (Nome, Prezzo, Durata). | ⏳ |
+| **Gestione Agenda** | Vista giornaliera/settimanale degli impegni. | ⏳ |
+| **Statistiche** | Monitoraggio guadagni e performance personali. | ⏳ |
+| **Feedback** | Visualizzazione e gestione delle recensioni ricevute. | ⏳ |
 
-### 💼 Emettitore (Provider)
-- Crea e gestisce il proprio catalogo servizi.
-- Gestisce le richieste di prenotazione (Accetta/Rifiuta).
-- Visualizza le proprie statistiche di guadagno.
-
-### 👑 Responsabile (Manager)
-- Supervisiona i Provider associati.
-- Monitora le performance del team.
-- Gestisce l'espansione del network tramite inviti.
+#### 👑 Responsabile (Manager)
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Supervisione Team** | Lista dei Provider associati e stato inviti. | ✅ |
+| **Monitoraggio Servizi** | Visualizzazione dei cataloghi dei propri Provider. | ⏳ |
+| **Analisi Globale** | Statistiche di fatturato aggregate per l'intero team. | ⏳ |
 
 ---
 
