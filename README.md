@@ -7,7 +7,7 @@ Benvenuto nel repository di **Progetto Programmazione Mobile**. Questa applicazi
 - **Navigazione Avanzata**: Utilizzo di `Navigation Compose` per gestire il flusso tra Login, Registrazione e Home specifiche per ruolo.
 - **Gestione Ruoli (Multi-Login)**: Sistema differenziato per:
     - **Cliente**: Può cercare e prenotare servizi.
-    - **Emettitore (Provider)**: Gestisce le proprie prenotazioni e servizi.
+    - **Emettitore (Provider)q**: Gestisce le proprie prenotazioni e servizi.
 - **Registrazione con Scelta Ruolo**: Interfaccia di iscrizione con RadioButton per la selezione del profilo utente.
 - **Architettura MVVM Clean**: Struttura delle cartelle organizzata per scalabilità:
     - `data/`: Modelli dati e logica di accesso.
