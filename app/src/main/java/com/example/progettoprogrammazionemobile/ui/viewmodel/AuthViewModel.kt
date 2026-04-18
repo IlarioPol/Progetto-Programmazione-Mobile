@@ -26,6 +26,10 @@ class AuthViewModel : ViewModel() {
     private val _authState = mutableStateOf<AuthState>(AuthState.Idle)
     val authState: State<AuthState> = _authState
 
+    // Stato per l'invito pendente
+    private val _pendingInvitation = mutableStateOf<String?>(null) // managerId
+    val pendingInvitation: State<String?> = _pendingInvitation
+
     init {
         checkCurrentUser()
     }
@@ -142,10 +146,8 @@ class AuthViewModel : ViewModel() {
         val userId = user?.uid
 
         if (userId != null) {
-            // 1. Elimina i dati da Firestore
             db.collection("users").document(userId).delete()
                 .addOnSuccessListener {
-                    // 2. Elimina l'utente da Firebase Auth
                     user.delete()
                         .addOnSuccessListener {
                             _authState.value = AuthState.AccountDeleted
@@ -167,6 +169,10 @@ class AuthViewModel : ViewModel() {
                 val user = document.toObject(User::class.java)
                 if (user != null) {
                     _authState.value = AuthState.Success(user)
+                    // Se è un provider senza manager, controlla gli inviti
+                    if (user.role == UserRole.PROVIDER && user.managerId == null) {
+                        checkForInvitations(user.email)
+                    }
                 } else {
                     _authState.value = AuthState.Error("Dati utente non trovati")
                 }
@@ -176,9 +182,45 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    private fun checkForInvitations(email: String) {
+        db.collection("invitations").document(email).get()
+            .addOnSuccessListener { document ->
+                if (document.exists() && document.getString("status") == "pending") {
+                    _pendingInvitation.value = document.getString("managerId")
+                }
+            }
+    }
+
+    fun acceptInvitation() {
+        val managerId = _pendingInvitation.value ?: return
+        val userId = auth.currentUser?.uid ?: return
+        val email = auth.currentUser?.email ?: return
+
+        _authState.value = AuthState.Loading
+        
+        // 1. Aggiorna l'utente con il managerId
+        db.collection("users").document(userId).update("managerId", managerId)
+            .addOnSuccessListener {
+                // 2. Rimuovi l'invito
+                db.collection("invitations").document(email).delete()
+                _pendingInvitation.value = null
+                fetchUserData(userId) // Ricarica i dati
+            }
+            .addOnFailureListener { exception ->
+                _authState.value = AuthState.Error("Errore nell'accettazione: ${exception.localizedMessage}")
+            }
+    }
+
+    fun declineInvitation() {
+        val email = auth.currentUser?.email ?: return
+        db.collection("invitations").document(email).delete()
+        _pendingInvitation.value = null
+    }
+
     fun logout() {
         auth.signOut()
         _authState.value = AuthState.Idle
+        _pendingInvitation.value = null
     }
     
     fun resetState() {

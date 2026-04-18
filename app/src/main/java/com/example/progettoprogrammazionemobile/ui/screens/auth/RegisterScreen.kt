@@ -105,7 +105,7 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text("Iscriviti come:", style = MaterialTheme.typography.titleMedium)
-        Row(Modifier.selectableGroup()) {
+        Column(Modifier.selectableGroup()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = selectedRole == UserRole.CLIENT,
@@ -113,13 +113,19 @@ fun RegisterScreen(
                 )
                 Text("Cliente", modifier = Modifier.padding(start = 8.dp))
             }
-            Spacer(modifier = Modifier.width(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = selectedRole == UserRole.PROVIDER,
                     onClick = { selectedRole = UserRole.PROVIDER }
                 )
-                Text("Emettitore Servizi", modifier = Modifier.padding(start = 8.dp))
+                Text("Emettitore Servizi (Provider)", modifier = Modifier.padding(start = 8.dp))
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = selectedRole == UserRole.MANAGER,
+                    onClick = { selectedRole = UserRole.MANAGER }
+                )
+                Text("Responsabile (Manager)", modifier = Modifier.padding(start = 8.dp))
             }
         }
 

@@ -1,85 +1,72 @@
-# Progetto Programmazione Mobile - Prenotazione Servizi
+# 📌 Progetto Programmazione Mobile - Prenotazione Servizi
 
-Benvenuto nel repository di **Progetto Programmazione Mobile**. Questa applicazione è un sistema di prenotazione servizi online sviluppato con **Jetpack Compose**, con gestione multi-utente (Clienti ed Emettitori di servizi).
+Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, progettata per la gestione professionale di prenotazioni tra Clienti, Emettitori (Provider) e Responsabili (Manager).
 
-## 🚀 Funzionalità Implementate
+---
 
-- **Navigazione Avanzata**: Utilizzo di `Navigation Compose` per gestire il flusso tra Login, Registrazione e Home specifiche per ruolo.
-- **Gestione Ruoli (Multi-Login)**: Sistema differenziato per:
-    - **Cliente**: Può cercare e prenotare servizi.
-    - **Emettitore (Provider)q**: Gestisce le proprie prenotazioni e servizi.
-- **Registrazione con Scelta Ruolo**: Interfaccia di iscrizione con RadioButton per la selezione del profilo utente.
-- **Architettura MVVM Clean**: Struttura delle cartelle organizzata per scalabilità:
-    - `data/`: Modelli dati e logica di accesso.
-    - `ui/screens/auth/`: Login e Registrazione.
-    - `ui/screens/client/`: Dashboard Cliente.
-    - `ui/screens/provider/`: Dashboard Emettitore.
-- **AuthViewModel**: Gestione centralizzata dello stato di autenticazione, caricamento ed errori.
+## 🛠️ Architettura e Tecnologie
+- **UI**: Jetpack Compose (Material 3)
+- **Logica**: MVVM (Model-View-ViewModel)
+- **Database**: Firebase Firestore (NoSQL Real-time)
+- **Auth**: Firebase Authentication (Email/Password, Email Verification)
+- **Navigation**: Type-safe Navigation Compose
 
-## 📋 Tabella delle Task Generali (Roadmap)
+---
 
-| Sezione              | Task                       | Descrizione                                                     | Stato |
-|:---------------------|:---------------------------|:----------------------------------------------------------------|:-----:|
-| **Autenticazione**   | Integrazione Firebase Auth | Collegare il sistema di registrazio/login reale a Firebase.     |   ✅   |
-| **Autenticazione**   | Email di Verifica          | Inviare email di attivazione per la registrazione.              |   ✅   |
-| **Gestione Profilo** | Logout                     | fare il logout una volta entrati con il proprio account         |   ✅   |
-| **Autenticazione**   | Recupero Password          | Funzionalità "Password Dimenticata" via email.                  |   ✅   |
-| **Gestione Profilo** | Modifica Password          | Permettere all'utente di cambiare password dall'area riservata. |   ✅   |
-| **Gestione Profilo** | Eliminazione Account       | Opzione per cancellare definitivamente il proprio profilo.      |   ✅    |
-| **Gestione Profilo** | Aggiornamento Dati         | Modifica di nome, foto profilo e contatti.                      |   ⏳   |
+## 📈 Roadmap di Sviluppo
 
-## 📋 Tabella Booking & Flussi (Prenotazioni)
+### 1. Sistema di Autenticazione & Sicurezza
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Integrazione Firebase** | Collegamento reale a Firebase Auth e Firestore. | ✅ |
+| **Email Verification** | Invio obbligatorio del link di verifica alla registrazione. | ✅ |
+| **Recupero Password** | Reset della password tramite link via email. | ✅ |
+| **Gestione Sessione** | Logout sicuro e persistenza dell'utente all'avvio. | ✅ |
+| **Sicurezza Profilo** | Modifica password dall'area riservata. | ✅ |
+| **Cancellazione Dati** | Eliminazione definitiva account e dati personali (GDPR compliance). | ✅ |
 
-| Azione | Attore | Descrizione | Stato |
-| :--- | :--- | :--- | :---: |
-| **Creazione Prenotazione** | Cliente | Selezionare un servizio e inviare la richiesta (Stato: *Pending*). | ⏳ |
-| **Notifica Richiesta** | Provider | Ricevere una notifica/avviso per una nuova prenotazione in attesa. | ⏳ |
-| **Conferma Prenotazione** | Provider | Accettare la richiesta del cliente (Stato: *Confirmed*). | ⏳ |
-| **Rifiuto Prenotazione** | Provider | Rifiutare la richiesta motivando la scelta (Stato: *Rejected*). | ⏳ |
-| **Cancellazione Cliente** | Cliente | Possibilità di annullare una prenotazione prima della data prevista. | ⏳ |
-| **Cancellazione Provider** | Provider | Possibilità di annullare un impegno per imprevisti con avviso al cliente. | ⏳ |
-| **Storico Stati** | Entrambi | Visualizzare lo storico con i cambi di stato (In attesa -> Confermato -> Completato). | ⏳ |
+### 2. Struttura Gerarchica (B2B Management)
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Ruoli Multipli** | Gestione accessi per Cliente, Provider e Manager. | ✅ |
+| **Sistema Inviti** | Il Manager può invitare un Provider tramite email. | ✅ |
+| **Accettazione Inviti** | Dialog automatico lato Provider per accettare la supervisione. | ✅ |
+| **Binding Manager-User** | Collegamento logico nel DB tra dipendente e supervisore. | ✅ |
 
-## 📋 Tabella Task Provider (Emettitore)
-
+### 3. Core Business (Prenotazioni & Servizi) ⏳ *In Sviluppo*
 | Area | Task | Descrizione | Stato |
 | :--- | :--- | :--- | :---: |
-| **Calendario** | Visualizzazione Giornaliera | Elenco dettagliato degli appuntamenti del giorno selezionato. | ⏳ |
-| **Calendario** | Navigazione Date | Possibilità di navigare tra i giorni (passati e futuri) per consultare l'agenda. | ⏳ |
-| **Prenotazioni** | Gestione Richieste (Pending) | Area dedicata per accettare o rifiutare le prenotazioni in arrivo. | ⏳ |
-| **Disponibilità** | Rilascio Slot (Cancellazioni) | Automazione: se una prenotazione viene annullata, lo slot torna disponibile nel calendario. | ⏳ |
-| **Analisi** | Statistiche Real-time | Grafici e dati reali su fatturato, servizi erogati e performance. | ⏳ |
-| **Recensioni** | Feedback Management | Lista funzionale delle recensioni con possibilità di risposta dell'emettitore. | ⏳ |
+| **Provider** | Creazione Servizi | Pubblicazione di servizi (nome, prezzo, durata) su Firestore. | ⏳ |
+| **Cliente** | Esplorazione | Visualizzazione dei servizi reali caricati dai Provider. | ⏳ |
+| **Booking** | Flusso Richiesta | Invio richiesta di prenotazione (Pending -> Confermato). | ⏳ |
+| **Calendar** | Agenda | Visualizzazione degli impegni confermati in formato lista/calendario. | ⏳ |
+| **Feedback** | Recensioni | Sistema di valutazione (1-5 stelle) e commenti per i servizi conclusi. | ⏳ |
 
-## 📋 Tabella Task Cliente
+---
 
-| Area | Task | Descrizione | Stato |
-| :--- | :--- | :--- | :---: |
-| **Esplorazione** | Ricerca Servizi | Visualizzare e filtrare i servizi creati dai diversi provider. | ⏳ |
-| **Prenotazione** | Richiesta Appuntamento | Selezionare un servizio e inviare la proposta di data/ora (Stato: *Pending*). | ⏳ |
-| **Tracking** | Stato Prenotazione | Monitorare se il provider ha accettato o rifiutato l'appuntamento. | ⏳ |
-| **Agenda** | Appuntamenti Confermati | Visualizzare chiaramente i prossimi impegni accettati dal provider. | ⏳ |
-| **Storico** | Servizi Passati | Consultare l'elenco delle prestazioni già ricevute e completate. | ⏳ |
-| **Feedback** | Recensioni e Voti | Lasciare un commento e una valutazione a 5 stelle per i servizi completati. | ⏳ |
-| **Gestione** | Annullamento | Possibilità di cancellare una richiesta pendente o un appuntamento già confermato. | ⏳ |
+## 📱 Dashboards per Ruolo
 
-## 🧪 Come testare l'applicazione
+### 👤 Cliente (User)
+- Esplora i servizi disponibili.
+- Gestisce le proprie prenotazioni e lo storico.
+- Lascia recensioni ai professionisti.
 
-L'app utilizza credenziali "mock" (simulate) per dimostrare i diversi flussi:
+### 💼 Emettitore (Provider)
+- Crea e gestisce il proprio catalogo servizi.
+- Gestisce le richieste di prenotazione (Accetta/Rifiuta).
+- Visualizza le proprie statistiche di guadagno.
 
-1.  **Accesso Cliente**:
-    - **Email**: `cliente@test.com`
-    - **Password**: `password`
-2.  **Accesso Emettitore**:
-    - **Email**: `provider@test.com`
-    - **Password**: `password`
-3.  **Registrazione**: Puoi creare un nuovo profilo scegliendo il ruolo; verrai reindirizzato alla Home corretta in base alla scelta.
+### 👑 Responsabile (Manager)
+- Supervisiona i Provider associati.
+- Monitora le performance del team.
+- Gestisce l'espansione del network tramite inviti.
 
-## 📦 Tecnologie Utilizzate
+---
 
-- **Kotlin**: Linguaggio di programmazione.
-- **Jetpack Compose**: UI Toolkit moderno.
-- **ViewModel**: Gestione logica e stato.
-- **Navigation Compose**: Routing interno all'app.
+## 🧪 Come Testare
+1. **Registrazione**: Crea un account scegliendo il ruolo desiderato.
+2. **Verifica**: Clicca sul link ricevuto via email (controlla lo Spam).
+3. **Login**: Accedi per essere indirizzato alla dashboard specifica del tuo ruolo.
+4. **Gerarchia**: Un Manager può invitare la tua email Provider; vedrai il pop-up di accettazione al prossimo login.
 
 ---
