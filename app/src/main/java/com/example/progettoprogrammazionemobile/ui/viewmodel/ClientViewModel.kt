@@ -71,7 +71,7 @@ class ClientViewModel : ViewModel() {
             serviceName = service.name,
             clientId = clientId,
             date = date,
-            status = "In attesa"
+            status = "Pending" // Sincronizzato con il Provider
         )
         
         db.collection("bookings").document(bookingId).set(newBooking)

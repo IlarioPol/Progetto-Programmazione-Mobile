@@ -2,9 +2,9 @@ package com.example.progettoprogrammazionemobile.data.model
 
 data class Service(
     val id: String = "",
-    val name: String,
-    val description: String,
-    val durationMinutes: Int,
-    val price: Double,
-    val providerId: String
+    val name: String = "",
+    val description: String = "",
+    val durationMinutes: Int = 0,
+    val price: Double = 0.0,
+    val providerId: String = ""
 )

@@ -8,6 +8,9 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -68,16 +71,22 @@ fun ProviderHomeScreen(
                     onClick = { selectedTab = 0 }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
-                    label = { Text("Recensioni") },
+                    icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                    label = { Text("Prenotazioni") },
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Info, contentDescription = null) },
-                    label = { Text("Stats") },
+                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
+                    label = { Text("Recensioni") },
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Info, contentDescription = null) },
+                    label = { Text("Stats") },
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 }
                 )
             }
         }
@@ -85,8 +94,9 @@ fun ProviderHomeScreen(
         Column(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
                 0 -> ServicesListTab(providerViewModel)
-                1 -> ReviewsListTab(providerViewModel)
-                2 -> StatisticsTab(providerViewModel)
+                1 -> ProviderBookingsTab(providerViewModel)
+                2 -> ReviewsListTab(providerViewModel)
+                3 -> StatisticsTab(providerViewModel)
             }
         }
     }
@@ -145,6 +155,76 @@ fun ServicesListTab(viewModel: ProviderViewModel) {
                     Text(service.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Durata: ${service.durationMinutes} min", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProviderBookingsTab(viewModel: ProviderViewModel) {
+    val bookings = viewModel.incomingBookings
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        item {
+            Text("Richieste Prenotazione", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        if (bookings.isEmpty()) {
+            item {
+                Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Nessuna richiesta in attesa.", color = Color.Gray)
+                }
+            }
+        }
+        items(bookings) { booking ->
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = when(booking.status) {
+                        "Pending" -> MaterialTheme.colorScheme.surfaceVariant
+                        "Confirmed" -> Color(0xFFE8F5E9)
+                        "Rejected" -> Color(0xFFFFEBEE)
+                        else -> MaterialTheme.colorScheme.surface
+                    }
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(booking.serviceName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Badge(containerColor = MaterialTheme.colorScheme.primary) {
+                            Text(booking.status)
+                        }
+                    }
+                    Text("Data: ${booking.date}", style = MaterialTheme.typography.bodyMedium)
+                    
+                    if (booking.status == "Pending") {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            OutlinedButton(
+                                onClick = { viewModel.updateBookingStatus(booking.id, "Rejected") },
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Icon(Icons.Default.Clear, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Rifiuta")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { viewModel.updateBookingStatus(booking.id, "Confirmed") },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Accetta")
+                            }
+                        }
+                    }
                 }
             }
         }
