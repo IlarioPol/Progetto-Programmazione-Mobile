@@ -74,9 +74,9 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 
 ### 1. Account Demo (Già configurati)
 Puoi utilizzare i seguenti account per testare le funzionalità senza registrarti (password valida per tutti: `password123`):
-- **Manager**: `manager@demo.com`
-- **Provider**: `provider@demo.com`
-- **Cliente**: `cliente@demo.com`
+- **Manager**: `bzgpgvpqubeppqldrw@vtmpj.com`
+- **Provider**: `bkivqrltdlacxvlnej@onldm.net`
+- **Cliente**: `wanox64415@mypethealh.com`
 
 ### 2. Registrazione Nuovi Utenti
 1. **Registrazione**: Crea un nuovo account scegliendo il ruolo desiderato.
