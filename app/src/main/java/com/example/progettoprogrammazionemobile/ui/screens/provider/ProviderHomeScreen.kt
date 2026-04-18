@@ -32,6 +32,8 @@ fun ProviderHomeScreen(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
+    
+    val pendingInviteManagerId by authViewModel.pendingInvitation
 
     Scaffold(
         topBar = {
@@ -87,6 +89,25 @@ fun ProviderHomeScreen(
                 2 -> StatisticsTab(providerViewModel)
             }
         }
+    }
+
+    // Dialog per invito pendente
+    pendingInviteManagerId?.let { managerId ->
+        AlertDialog(
+            onDismissRequest = { /* Obbliga a scegliere */ },
+            title = { Text("Invito Supervisione") },
+            text = { Text("Un Responsabile desidera supervisionare il tuo account. Accettando, potrà visualizzare le tue statistiche e i tuoi servizi.") },
+            confirmButton = {
+                Button(onClick = { authViewModel.acceptInvitation() }) {
+                    Text("Accetta")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { authViewModel.declineInvitation() }) {
+                    Text("Rifiuta")
+                }
+            }
+        )
     }
 
     if (showAddDialog) {

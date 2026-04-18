@@ -15,6 +15,7 @@ import com.example.progettoprogrammazionemobile.data.model.UserRole
 import com.example.progettoprogrammazionemobile.ui.screens.auth.LoginScreen
 import com.example.progettoprogrammazionemobile.ui.screens.auth.RegisterScreen
 import com.example.progettoprogrammazionemobile.ui.screens.client.ClientHomeScreen
+import com.example.progettoprogrammazionemobile.ui.screens.manager.ManagerHomeScreen
 import com.example.progettoprogrammazionemobile.ui.screens.profile.ProfileScreen
 import com.example.progettoprogrammazionemobile.ui.screens.provider.ProviderHomeScreen
 import com.example.progettoprogrammazionemobile.ui.theme.ProgettoProgrammazioneMobileTheme
@@ -36,7 +37,11 @@ class MainActivity : ComponentActivity() {
                         composable("login") {
                             LoginScreen(
                                 onLoginSuccess = { role ->
-                                    val destination = if (role == UserRole.CLIENT) "client_home" else "provider_home"
+                                    val destination = when (role) {
+                                        UserRole.CLIENT -> "client_home"
+                                        UserRole.PROVIDER -> "provider_home"
+                                        UserRole.MANAGER -> "manager_home"
+                                    }
                                     navController.navigate(destination) {
                                         popUpTo("login") { inclusive = true }
                                     }
@@ -47,7 +52,11 @@ class MainActivity : ComponentActivity() {
                         composable("register") {
                             RegisterScreen(
                                 onRegisterSuccess = { role ->
-                                    val destination = if (role == UserRole.CLIENT) "client_home" else "provider_home"
+                                    val destination = when (role) {
+                                        UserRole.CLIENT -> "client_home"
+                                        UserRole.PROVIDER -> "provider_home"
+                                        UserRole.MANAGER -> "manager_home"
+                                    }
                                     navController.navigate(destination) {
                                         popUpTo("login") { inclusive = true }
                                     }
@@ -67,6 +76,16 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("provider_home") {
                             ProviderHomeScreen(
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo(0)
+                                    }
+                                },
+                                onProfileClick = { navController.navigate("profile") }
+                            )
+                        }
+                        composable("manager_home") {
+                            ManagerHomeScreen(
                                 onLogout = {
                                     navController.navigate("login") {
                                         popUpTo(0)
