@@ -36,7 +36,7 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 ### 📅 3. Flusso Prenotazioni (Booking Flow)
 | Fase | Attore | Descrizione | Stato |
 | :--- | :--- | :--- | :---: |
-| **Richiesta** | Cliente | Selezione servizio e invio proposta data/ora (Stato: *Pending*). | ⏳ |
+| **Richiesta** | Cliente | Selezione servizio e invio proposta data/ora (Stato: *Pending*). | ✅ |
 | **Notifica** | Provider | Ricezione avviso per nuova prenotazione in attesa. | ⏳ |
 | **Approvazione** | Provider | Accettazione della richiesta (Stato: *Confirmed*). | ⏳ |
 | **Rifiuto** | Provider | Rifiuto della richiesta con eventuale nota (Stato: *Rejected*). | ⏳ |
@@ -48,15 +48,15 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 #### 👤 Cliente (User)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Esplorazione** | Ricerca e filtri sui servizi caricati dai Provider. | ⏳ |
+| **Esplorazione** | Ricerca e filtri sui servizi caricati dai Provider. | ✅ |
 | **Tracking** | Monitoraggio dello stato delle proprie richieste (Pending/Confirmed). | ⏳ |
 | **Agenda Personale** | Vista dei prossimi appuntamenti confermati. | ⏳ |
-| **Recensioni** | Sistema di valutazione (1-5 stelle) e commenti post-servizio. | ⏳ |
+| **Recensioni** | Sistema di valutazione (1-5 stelle) e commenti post-servizio. | ✅ |
 
 #### 💼 Emettitore (Provider)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Catalogo Servizi** | Creazione e modifica servizi (Nome, Prezzo, Durata). | ⏳ |
+| **Catalogo Servizi** | Creazione e modifica servizi (Nome, Prezzo, Durata). | ✅ |
 | **Gestione Agenda** | Vista giornaliera/settimanale degli impegni. | ⏳ |
 | **Statistiche** | Monitoraggio guadagni e performance personali. | ⏳ |
 | **Feedback** | Visualizzazione e gestione delle recensioni ricevute. | ⏳ |
