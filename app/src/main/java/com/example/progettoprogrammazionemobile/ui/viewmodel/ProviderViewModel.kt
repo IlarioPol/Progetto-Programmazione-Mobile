@@ -6,8 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.progettoprogrammazionemobile.data.model.Review
 import com.example.progettoprogrammazionemobile.data.model.Service
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.util.UUID
 
 class ProviderViewModel : ViewModel() {
+    private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
     private val _services = mutableStateListOf<Service>()
     val services: List<Service> = _services
 
@@ -18,30 +24,50 @@ class ProviderViewModel : ViewModel() {
     val totalTurnover: State<Double> = _totalTurnover
 
     init {
-        // Dati finti per test
-        _services.add(Service("1", "Taglio Capelli", "Taglio classico uomo", 30, 20.0, "provider_1"))
-        _services.add(Service("2", "Barba", "Regolazione barba e panno caldo", 20, 15.0, "provider_1"))
+        fetchMyServices()
+        // In futuro caricheremo anche recensioni e statistiche reali
+    }
+
+    fun fetchMyServices() {
+        val providerId = auth.currentUser?.uid ?: return
         
-        _reviews.add(Review("1", "1", "Luca G.", 5, "Ottimo servizio!", "2023-10-01"))
-        _reviews.add(Review("2", "1", "Paolo B.", 4, "Molto bravo, un po' in ritardo.", "2023-10-05"))
-        
-        calculateStats()
+        db.collection("services")
+            .whereEqualTo("providerId", providerId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                
+                if (snapshot != null) {
+                    _services.clear()
+                    for (doc in snapshot.documents) {
+                        val service = doc.toObject(Service::class.java)
+                        if (service != null) {
+                            _services.add(service)
+                        }
+                    }
+                }
+            }
     }
 
     fun addService(name: String, description: String, duration: Int, price: Double) {
+        val providerId = auth.currentUser?.uid ?: return
+        val serviceId = UUID.randomUUID().toString()
+        
         val newService = Service(
-            id = (_services.size + 1).toString(),
+            id = serviceId,
             name = name,
             description = description,
             durationMinutes = duration,
             price = price,
-            providerId = "provider_1"
+            providerId = providerId
         )
-        _services.add(newService)
+        
+        db.collection("services").document(serviceId).set(newService)
+            .addOnSuccessListener {
+                // Il listener in fetchMyServices aggiornerà la lista automaticamente
+            }
     }
 
     private fun calculateStats() {
-        // In una app reale, questo verrebbe calcolato dalle prenotazioni completate
-        _totalTurnover.value = 450.0 // Mock value
+        // Verrà implementato con le prenotazioni reali
     }
 }
