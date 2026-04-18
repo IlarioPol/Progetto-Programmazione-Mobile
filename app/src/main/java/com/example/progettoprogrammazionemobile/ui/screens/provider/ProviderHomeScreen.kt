@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 import com.example.progettoprogrammazionemobile.ui.viewmodel.ProviderViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -184,6 +186,7 @@ fun ProviderBookingsTab(viewModel: ProviderViewModel) {
                         "Pending" -> MaterialTheme.colorScheme.surfaceVariant
                         "Confirmed" -> Color(0xFFE8F5E9)
                         "Rejected" -> Color(0xFFFFEBEE)
+                        "Completed" -> Color(0xFFE3F2FD)
                         else -> MaterialTheme.colorScheme.surface
                     }
                 )
@@ -194,34 +197,55 @@ fun ProviderBookingsTab(viewModel: ProviderViewModel) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(booking.serviceName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Badge(containerColor = MaterialTheme.colorScheme.primary) {
-                            Text(booking.status)
+                        Badge(
+                            containerColor = when(booking.status) {
+                                "Confirmed" -> Color(0xFF4CAF50)
+                                "Completed" -> Color(0xFF2196F3)
+                                "Rejected" -> Color(0xFFF44336)
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                        ) {
+                            Text(booking.status, color = Color.White)
                         }
                     }
                     Text("Data: ${booking.date}", style = MaterialTheme.typography.bodyMedium)
                     
-                    if (booking.status == "Pending") {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            OutlinedButton(
-                                onClick = { viewModel.updateBookingStatus(booking.id, "Rejected") },
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    when (booking.status) {
+                        "Pending" -> {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
                             ) {
-                                Icon(Icons.Default.Clear, contentDescription = null)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Rifiuta")
+                                OutlinedButton(
+                                    onClick = { viewModel.updateBookingStatus(booking.id, "Rejected") },
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                    Icon(Icons.Default.Clear, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Rifiuta")
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = { viewModel.updateBookingStatus(booking.id, "Confirmed") },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Accetta")
+                                }
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        "Confirmed" -> {
+                            Spacer(modifier = Modifier.height(16.dp))
                             Button(
-                                onClick = { viewModel.updateBookingStatus(booking.id, "Confirmed") },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                                onClick = { viewModel.updateBookingStatus(booking.id, "Completed") },
+                                modifier = Modifier.align(Alignment.End),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                             ) {
-                                Icon(Icons.Default.Check, contentDescription = null)
+                                Icon(Icons.Default.Done, contentDescription = null)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Accetta")
+                                Text("Segna come Completato")
                             }
                         }
                     }
@@ -264,14 +288,20 @@ fun ReviewsListTab(viewModel: ProviderViewModel) {
 @Composable
 fun StatisticsTab(viewModel: ProviderViewModel) {
     val turnover by viewModel.totalTurnover
+    val servicesCount = viewModel.services.size
+    val completedCount = viewModel.incomingBookings.count { it.status == "Completed" }
+
     Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Statistiche Generali", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Le Tue Statistiche", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(32.dp))
         
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+        Card(
+            modifier = Modifier.fillMaxWidth(), 
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        ) {
             Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Fatturato Totale", style = MaterialTheme.typography.titleMedium)
-                Text("€$turnover", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
+                Text("€${String.format(Locale.getDefault(), "%.2f", turnover)}", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
             }
         }
         
@@ -281,13 +311,13 @@ fun StatisticsTab(viewModel: ProviderViewModel) {
             Card(modifier = Modifier.weight(1f)) {
                 Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Servizi Attivi", style = MaterialTheme.typography.bodySmall)
-                    Text("${viewModel.services.size}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("$servicesCount", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
             }
             Card(modifier = Modifier.weight(1f)) {
                 Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Media Voti", style = MaterialTheme.typography.bodySmall)
-                    Text("4.5", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("Lavori Fatti", style = MaterialTheme.typography.bodySmall)
+                    Text("$completedCount", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
             }
         }

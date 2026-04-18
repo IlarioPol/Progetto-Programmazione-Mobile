@@ -40,8 +40,9 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 | **Notifica** | Provider | Ricezione automatica della richiesta nella dashboard. | ✅ |
 | **Approvazione** | Provider | Accettazione della richiesta (Stato: *Confirmed*). | ✅ |
 | **Rifiuto** | Provider | Rifiuto della richiesta (Stato: *Rejected*). | ✅ |
-| **Completamento** | Provider | Chiusura dell'appuntamento eseguito (Stato: *Completed*). | ⏳ |
+| **Completamento** | Provider | Chiusura dell'appuntamento eseguito (Stato: *Completed*). | ✅ |
 | **Feedback** | Cliente | Invio recensione post-servizio. | ✅ |
+| **Cancellazione** | Entrambi | Possibilità di annullare un impegno prima della data prevista. | ⏳ |
 
 ### 🛠️ 4. Funzionalità per Ruolo
 
@@ -58,7 +59,7 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 | :--- | :--- | :---: |
 | **Catalogo Servizi** | Creazione e modifica servizi (Nome, Prezzo, Durata). | ✅ |
 | **Gestione Agenda** | Dashboard per accettare/rifiutare le prenotazioni in arrivo. | ✅ |
-| **Statistiche** | Monitoraggio guadagni e performance personali. | ⏳ |
+| **Statistiche** | Monitoraggio guadagni e performance personali. | ✅ |
 | **Feedback** | Visualizzazione delle recensioni ricevute dai clienti. | ✅ |
 
 #### 👑 Responsabile (Manager)
