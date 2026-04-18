@@ -71,8 +71,16 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 ---
 
 ## 🧪 Come Testare
-1. **Registrazione**: Crea un account scegliendo il ruolo desiderato.
-2. **Verifica**: Clicca sul link ricevuto via email (controlla lo Spam).
+
+### 1. Account Demo (Già configurati)
+Puoi utilizzare i seguenti account per testare le funzionalità senza registrarti (password valida per tutti: `password123`):
+- **Manager**: `manager@demo.com`
+- **Provider**: `provider@demo.com`
+- **Cliente**: `cliente@demo.com`
+
+### 2. Registrazione Nuovi Utenti
+1. **Registrazione**: Crea un nuovo account scegliendo il ruolo desiderato.
+2. **Verifica**: Controlla la tua email per attivare l'account tramite il link di Firebase.
 3. **Login**: Accedi per essere indirizzato alla dashboard specifica del tuo ruolo.
 4. **Gerarchia**: Un Manager può invitare la tua email Provider; vedrai il pop-up di accettazione al prossimo login.
 
