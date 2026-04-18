@@ -5,9 +5,14 @@ import androidx.lifecycle.ViewModel
 import com.example.progettoprogrammazionemobile.data.model.Booking
 import com.example.progettoprogrammazionemobile.data.model.Review
 import com.example.progettoprogrammazionemobile.data.model.Service
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
 
 class ClientViewModel : ViewModel() {
+    private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
     private val _availableServices = mutableStateListOf<Service>()
     val availableServices: List<Service> = _availableServices
 
@@ -15,30 +20,76 @@ class ClientViewModel : ViewModel() {
     val myBookings: List<Booking> = _myBookings
 
     init {
-        // Mock services
-        _availableServices.add(Service("1", "Taglio Capelli", "Taglio classico uomo", 30, 20.0, "provider_1"))
-        _availableServices.add(Service("2", "Barba", "Regolazione barba e panno caldo", 20, 15.0, "provider_1"))
-        _availableServices.add(Service("3", "Massaggio Relax", "Massaggio corpo 60 minuti", 60, 50.0, "provider_2"))
+        fetchAllServices()
+        fetchMyBookings()
+    }
+
+    private fun fetchAllServices() {
+        db.collection("services")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                
+                if (snapshot != null) {
+                    _availableServices.clear()
+                    for (doc in snapshot.documents) {
+                        val service = doc.toObject(Service::class.java)
+                        if (service != null) {
+                            _availableServices.add(service)
+                        }
+                    }
+                }
+            }
+    }
+
+    private fun fetchMyBookings() {
+        val clientId = auth.currentUser?.uid ?: return
         
-        // Mock initial booking
-        _myBookings.add(Booking("b1", "1", "Taglio Capelli", "client_1", "2023-11-20 10:00", "Confermata"))
+        db.collection("bookings")
+            .whereEqualTo("clientId", clientId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                
+                if (snapshot != null) {
+                    _myBookings.clear()
+                    for (doc in snapshot.documents) {
+                        val booking = doc.toObject(Booking::class.java)
+                        if (booking != null) {
+                            _myBookings.add(booking)
+                        }
+                    }
+                }
+            }
     }
 
     fun bookService(service: Service, date: String) {
+        val clientId = auth.currentUser?.uid ?: return
+        val bookingId = UUID.randomUUID().toString()
+        
         val newBooking = Booking(
-            id = UUID.randomUUID().toString(),
+            id = bookingId,
             serviceId = service.id,
             serviceName = service.name,
-            clientId = "client_1", // In real app, get from current user
+            clientId = clientId,
             date = date,
             status = "In attesa"
         )
-        _myBookings.add(newBooking)
+        
+        db.collection("bookings").document(bookingId).set(newBooking)
     }
 
     fun addReview(serviceId: String, serviceName: String, rating: Int, comment: String) {
-        // In a real app, this would save to a database
-        // For now, we just simulate the action
-        println("Recensione aggiunta per $serviceName: $rating stelle - $comment")
+        val clientId = auth.currentUser?.uid ?: return
+        val reviewId = UUID.randomUUID().toString()
+        
+        val newReview = Review(
+            id = reviewId,
+            serviceId = serviceId,
+            clientName = auth.currentUser?.displayName ?: "Cliente",
+            rating = rating,
+            comment = comment,
+            date = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+        )
+        
+        db.collection("reviews").document(reviewId).set(newReview)
     }
 }
