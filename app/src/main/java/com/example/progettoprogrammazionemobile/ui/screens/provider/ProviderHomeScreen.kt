@@ -11,7 +11,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -23,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.progettoprogrammazionemobile.data.model.Service
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 import com.example.progettoprogrammazionemobile.ui.viewmodel.ProviderViewModel
 import java.util.Locale
@@ -37,6 +40,7 @@ fun ProviderHomeScreen(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var serviceToEdit by remember { mutableStateOf<Service?>(null) }
     
     val pendingInviteManagerId by authViewModel.pendingInvitation
 
@@ -95,7 +99,11 @@ fun ProviderHomeScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                0 -> ServicesListTab(providerViewModel)
+                0 -> ServicesListTab(
+                    viewModel = providerViewModel,
+                    onEditClick = { serviceToEdit = it },
+                    onDeleteClick = { providerViewModel.deleteService(it) }
+                )
                 1 -> ProviderBookingsTab(providerViewModel)
                 2 -> ReviewsListTab(providerViewModel)
                 3 -> StatisticsTab(providerViewModel)
@@ -123,7 +131,8 @@ fun ProviderHomeScreen(
     }
 
     if (showAddDialog) {
-        AddServiceDialog(
+        ServiceDialog(
+            title = "Nuovo Servizio",
             onDismiss = { showAddDialog = false },
             onConfirm = { name, desc, dur, price ->
                 providerViewModel.addService(name, desc, dur, price)
@@ -131,10 +140,29 @@ fun ProviderHomeScreen(
             }
         )
     }
+
+    serviceToEdit?.let { service ->
+        ServiceDialog(
+            title = "Modifica Servizio",
+            initialName = service.name,
+            initialDesc = service.description,
+            initialDuration = service.durationMinutes.toString(),
+            initialPrice = service.price.toString(),
+            onDismiss = { serviceToEdit = null },
+            onConfirm = { name, desc, dur, price ->
+                providerViewModel.updateService(service.id, name, desc, dur, price)
+                serviceToEdit = null
+            }
+        )
+    }
 }
 
 @Composable
-fun ServicesListTab(viewModel: ProviderViewModel) {
+fun ServicesListTab(
+    viewModel: ProviderViewModel,
+    onEditClick: (Service) -> Unit,
+    onDeleteClick: (String) -> Unit
+) {
     val services = viewModel.services
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         item {
@@ -157,6 +185,19 @@ fun ServicesListTab(viewModel: ProviderViewModel) {
                     Text(service.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Durata: ${service.durationMinutes} min", style = MaterialTheme.typography.bodySmall)
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        IconButton(onClick = { onEditClick(service) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Modifica", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { onDeleteClick(service.id) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 }
             }
         }
@@ -325,15 +366,23 @@ fun StatisticsTab(viewModel: ProviderViewModel) {
 }
 
 @Composable
-fun AddServiceDialog(onDismiss: () -> Unit, onConfirm: (String, String, Int, Double) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var desc by remember { mutableStateOf("") }
-    var duration by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
+fun ServiceDialog(
+    title: String,
+    initialName: String = "",
+    initialDesc: String = "",
+    initialDuration: String = "",
+    initialPrice: String = "",
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, Int, Double) -> Unit
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var desc by remember { mutableStateOf(initialDesc) }
+    var duration by remember { mutableStateOf(initialDuration) }
+    var price by remember { mutableStateOf(initialPrice) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nuovo Servizio") },
+        title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome") })
@@ -345,7 +394,7 @@ fun AddServiceDialog(onDismiss: () -> Unit, onConfirm: (String, String, Int, Dou
         confirmButton = {
             Button(onClick = { 
                 onConfirm(name, desc, duration.toIntOrNull() ?: 0, price.toDoubleOrNull() ?: 0.0)
-            }) { Text("Aggiungi") }
+            }) { Text("Salva") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Annulla") }

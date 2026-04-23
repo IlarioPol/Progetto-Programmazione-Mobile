@@ -11,6 +11,7 @@ import com.example.progettoprogrammazionemobile.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
+import java.util.Locale
 
 class ProviderViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
@@ -60,8 +61,6 @@ class ProviderViewModel : ViewModel() {
     }
 
     private fun fetchIncomingBookings() {
-        val providerId = auth.currentUser?.uid ?: return
-        
         db.collection("bookings")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
@@ -103,20 +102,6 @@ class ProviderViewModel : ViewModel() {
         )
         
         db.collection("services").document(serviceId).set(newService)
-    }
-
-    fun updateService(serviceId: String, name: String, description: String, duration: Int, price: Double) {
-        db.collection("services").document(serviceId)
-            .update(
-                "name", name,
-                "description", description,
-                "durationMinutes", duration,
-                "price", price
-            )
-    }
-
-    fun deleteService(serviceId: String) {
-        db.collection("services").document(serviceId).delete()
     }
 
     private fun calculateStats() {

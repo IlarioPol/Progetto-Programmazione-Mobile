@@ -1,7 +1,9 @@
 package com.example.progettoprogrammazionemobile.ui.screens.client
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -18,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.progettoprogrammazionemobile.data.model.Business
 import com.example.progettoprogrammazionemobile.data.model.Service
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 import com.example.progettoprogrammazionemobile.ui.viewmodel.ClientViewModel
@@ -37,7 +40,7 @@ fun ClientHomeScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Area Cliente") },
+                title = { Text("Prenota Servizi") },
                 actions = {
                     IconButton(onClick = onProfileClick) {
                         Icon(Icons.Default.AccountCircle, contentDescription = "Profilo")
@@ -70,7 +73,7 @@ fun ClientHomeScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                0 -> ExploreServicesTab(clientViewModel) { selectedServiceForBooking = it }
+                0 -> ExploreTab(clientViewModel) { selectedServiceForBooking = it }
                 1 -> MyBookingsTab(clientViewModel) { selectedServiceForReview = it }
             }
         }
@@ -99,38 +102,122 @@ fun ClientHomeScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExploreServicesTab(viewModel: ClientViewModel, onBookClick: (Service) -> Unit) {
+fun ExploreTab(viewModel: ClientViewModel, onBookClick: (Service) -> Unit) {
+    val categories = listOf("Tutte", "Medicina", "Legal", "Beauty", "Ristorazione", "Istruzione", "Altro")
+    val selectedCategory by viewModel.selectedCategory
+    val searchQuery by viewModel.searchQuery
+    
+    val businesses = viewModel.availableBusinesses
     val services = viewModel.availableServices
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        item {
-            Text("Servizi Disponibili", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Search Bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { viewModel.onSearchQueryChange(it) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            placeholder = { Text("Cerca azienda o servizio...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            shape = MaterialTheme.shapes.medium
+        )
+
+        // Categories Row
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(categories) { category ->
+                FilterChip(
+                    selected = selectedCategory == category,
+                    onClick = { viewModel.onCategorySelected(category) },
+                    label = { Text(category) }
+                )
+            }
         }
-        items(services) { service ->
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(service.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text("€${service.price}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                    }
-                    Text(service.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            if (businesses.isNotEmpty()) {
+                item {
+                    Text("Aziende e Professionisti", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Durata: ${service.durationMinutes} min", style = MaterialTheme.typography.bodySmall)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = { onBookClick(service) },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("Prenota Ora")
-                    }
                 }
+                items(businesses) { business ->
+                    BusinessCard(business)
+                }
+                item { Spacer(modifier = Modifier.height(24.dp)) }
+            }
+
+            item {
+                Text("Servizi Disponibili", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            if (services.isEmpty()) {
+                item {
+                    Text("Nessun servizio trovato.", color = Color.Gray, modifier = Modifier.padding(vertical = 16.dp))
+                }
+            } else {
+                items(services) { service ->
+                    ServiceCard(service, onBookClick)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BusinessCard(business: Business) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(business.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(business.category, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(business.description, style = MaterialTheme.typography.bodyMedium)
+            Text(business.address, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
+    }
+}
+
+@Composable
+fun ServiceCard(service: Service, onBookClick: (Service) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(service.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("€${service.price}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            }
+            Text(service.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Durata: ${service.durationMinutes} min", style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = { onBookClick(service) },
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text("Prenota Ora")
             }
         }
     }
@@ -154,7 +241,15 @@ fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
         items(bookings) { booking ->
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                colors = CardDefaults.cardColors(
+                    containerColor = when(booking.status) {
+                        "Pending" -> MaterialTheme.colorScheme.surfaceVariant
+                        "Confirmed" -> Color(0xFFE8F5E9)
+                        "Rejected" -> Color(0xFFFFEBEE)
+                        "Completed" -> Color(0xFFE3F2FD)
+                        else -> MaterialTheme.colorScheme.surface
+                    }
+                )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
@@ -162,17 +257,29 @@ fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(booking.serviceName, fontWeight = FontWeight.Bold)
-                        Text(booking.status, color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
+                        Badge(
+                            containerColor = when(booking.status) {
+                                "Confirmed" -> Color(0xFF4CAF50)
+                                "Completed" -> Color(0xFF2196F3)
+                                "Rejected" -> Color(0xFFF44336)
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                        ) {
+                            Text(booking.status, color = Color.White)
+                        }
                     }
                     Text("Data: ${booking.date}", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedButton(
-                        onClick = { onReviewClick(booking.serviceName) },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Lascia Recensione")
+                    
+                    if (booking.status == "Completed") {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = { onReviewClick(booking.serviceName) },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Lascia Recensione")
+                        }
                     }
                 }
             }

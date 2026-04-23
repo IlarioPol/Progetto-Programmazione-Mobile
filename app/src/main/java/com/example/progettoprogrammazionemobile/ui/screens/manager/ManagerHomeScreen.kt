@@ -27,13 +27,20 @@ class ManagerViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
     
     var inviteStatus = mutableStateOf<String?>(null)
-    var myProviders = mutableStateListOf<String>() // Simplified for now: just emails or names
+    var myProviders = mutableStateListOf<String>()
 
-    fun inviteProvider(email: String) {
+    fun inviteProvider(email: String, businessId: String?, businessName: String?) {
+        if (businessId == null) {
+            inviteStatus.value = "Errore: Azienda non configurata"
+            return
+        }
+        
         val managerId = auth.currentUser?.uid ?: return
         val invitation = hashMapOf(
             "email" to email,
             "managerId" to managerId,
+            "businessId" to businessId,
+            "businessName" to (businessName ?: "Azienda"),
             "status" to "pending"
         )
         
@@ -46,11 +53,12 @@ class ManagerViewModel : ViewModel() {
             }
     }
     
-    // Logic to fetch providers under this manager
-    fun fetchMyProviders() {
-        val managerId = auth.currentUser?.uid ?: return
+    fun fetchMyProviders(businessId: String?) {
+        if (businessId == null) return
+        
         db.collection("users")
-            .whereEqualTo("managerId", managerId)
+            .whereEqualTo("businessId", businessId)
+            .whereEqualTo("role", "PROVIDER")
             .get()
             .addOnSuccessListener { result ->
                 myProviders.clear()
@@ -71,15 +79,16 @@ fun ManagerHomeScreen(
 ) {
     var showInviteDialog by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) }
+    val business = authViewModel.userBusiness.value
 
-    LaunchedEffect(Unit) {
-        managerViewModel.fetchMyProviders()
+    LaunchedEffect(business) {
+        managerViewModel.fetchMyProviders(business?.id)
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Area Manager") },
+                title = { Text(business?.name ?: "Area Manager") },
                 actions = {
                     IconButton(onClick = onProfileClick) {
                         Icon(Icons.Default.AccountCircle, contentDescription = "Profilo")
@@ -113,12 +122,15 @@ fun ManagerHomeScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
             if (selectedTab == 0) {
-                Text("Provider Supervisionati", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("Professionisti del Team", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                if (business != null) {
+                    Text(text = "Categoria: ${business.category}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 if (managerViewModel.myProviders.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Non hai ancora provider associati.", color = Color.Gray)
+                        Text("Nessun professionista associato.", color = Color.Gray)
                     }
                 } else {
                     LazyColumn {
@@ -142,7 +154,7 @@ fun ManagerHomeScreen(
         InviteProviderDialog(
             onDismiss = { showInviteDialog = false },
             onConfirm = { email ->
-                managerViewModel.inviteProvider(email)
+                managerViewModel.inviteProvider(email, business?.id, business?.name)
                 showInviteDialog = false
             }
         )
@@ -150,7 +162,7 @@ fun ManagerHomeScreen(
     
     managerViewModel.inviteStatus.value?.let { status ->
         LaunchedEffect(status) {
-            // Qui si potrebbe usare una Snackbar
+            // Snackbar logic would go here
             managerViewModel.inviteStatus.value = null
         }
     }
@@ -165,7 +177,7 @@ fun InviteProviderDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
         title = { Text("Invita nuovo Provider") },
         text = {
             Column {
-                Text("Inserisci l'email del provider che vuoi supervisionare:")
+                Text("Inserisci l'email del professionista da aggiungere alla tua azienda:")
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = email,
