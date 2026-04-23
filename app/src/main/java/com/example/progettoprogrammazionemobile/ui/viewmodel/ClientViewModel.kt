@@ -86,10 +86,7 @@ class ClientViewModel : ViewModel() {
         availableServices.addAll(_allServices.filter { service ->
             val business = _allBusinesses.find { it.id == service.businessId }
             
-            // Un servizio deve appartenere a un'azienda che rispetta la categoria selezionata
             val matchesCat = cat == "Tutte" || (business != null && business.category == cat)
-            
-            // E deve rispettare la query di ricerca (nel nome del servizio o nel nome dell'azienda)
             val matchesQuery = service.name.lowercase().contains(query) || 
                              (business != null && business.name.lowercase().contains(query))
             
@@ -121,6 +118,14 @@ class ClientViewModel : ViewModel() {
             status = "Pending"
         )
         db.collection("bookings").document(bookingId).set(newBooking)
+    }
+
+    fun cancelBooking(bookingId: String) {
+        db.collection("bookings").document(bookingId)
+            .update("status", "Canceled")
+            .addOnSuccessListener {
+                // Il listener aggiornerà la lista automaticamente
+            }
     }
 
     fun addReview(serviceId: String, serviceName: String, rating: Int, comment: String) {

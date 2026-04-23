@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.progettoprogrammazionemobile.data.model.Booking
 import com.example.progettoprogrammazionemobile.data.model.Business
 import com.example.progettoprogrammazionemobile.data.model.Service
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
@@ -226,6 +228,8 @@ fun ServiceCard(service: Service, onBookClick: (Service) -> Unit) {
 @Composable
 fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
     val bookings = viewModel.myBookings
+    var bookingToCancel by remember { mutableStateOf<Booking?>(null) }
+
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         item {
             Text("Le Mie Prenotazioni", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -247,6 +251,7 @@ fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
                         "Confirmed" -> Color(0xFFE8F5E9)
                         "Rejected" -> Color(0xFFFFEBEE)
                         "Completed" -> Color(0xFFE3F2FD)
+                        "Canceled" -> Color(0xFFEEEEEE)
                         else -> MaterialTheme.colorScheme.surface
                     }
                 )
@@ -262,6 +267,7 @@ fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
                                 "Confirmed" -> Color(0xFF4CAF50)
                                 "Completed" -> Color(0xFF2196F3)
                                 "Rejected" -> Color(0xFFF44336)
+                                "Canceled" -> Color.Gray
                                 else -> MaterialTheme.colorScheme.primary
                             }
                         ) {
@@ -270,6 +276,19 @@ fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
                     }
                     Text("Data: ${booking.date}", style = MaterialTheme.typography.bodyMedium)
                     
+                    if (booking.status == "Pending" || booking.status == "Confirmed") {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextButton(
+                            onClick = { bookingToCancel = booking },
+                            modifier = Modifier.align(Alignment.End),
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Annulla Prenotazione")
+                        }
+                    }
+
                     if (booking.status == "Completed") {
                         Spacer(modifier = Modifier.height(12.dp))
                         OutlinedButton(
@@ -284,6 +303,30 @@ fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
                 }
             }
         }
+    }
+
+    bookingToCancel?.let { booking ->
+        AlertDialog(
+            onDismissRequest = { bookingToCancel = null },
+            title = { Text("Annulla Prenotazione") },
+            text = { Text("Sei sicuro di voler annullare la prenotazione per ${booking.serviceName}?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.cancelBooking(booking.id)
+                        bookingToCancel = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Conferma Annullamento")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { bookingToCancel = null }) {
+                    Text("Indietro")
+                }
+            }
+        )
     }
 }
 
