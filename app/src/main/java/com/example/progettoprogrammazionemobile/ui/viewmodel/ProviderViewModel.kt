@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.example.progettoprogrammazionemobile.data.model.Booking
 import com.example.progettoprogrammazionemobile.data.model.Review
 import com.example.progettoprogrammazionemobile.data.model.Service
+import com.example.progettoprogrammazionemobile.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
@@ -26,10 +27,20 @@ class ProviderViewModel : ViewModel() {
 
     private val _totalTurnover = mutableStateOf(0.0)
     val totalTurnover: State<Double> = _totalTurnover
+    
+    private var currentUser: User? = null
 
     init {
-        fetchMyServices()
-        fetchIncomingBookings()
+        fetchCurrentUserAndData()
+    }
+
+    private fun fetchCurrentUserAndData() {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                currentUser = doc.toObject(User::class.java)
+                fetchMyServices()
+            }
     }
 
     fun fetchMyServices() {
@@ -42,12 +53,7 @@ class ProviderViewModel : ViewModel() {
                 
                 if (snapshot != null) {
                     _services.clear()
-                    for (doc in snapshot.documents) {
-                        val service = doc.toObject(Service::class.java)
-                        if (service != null) {
-                            _services.add(service)
-                        }
-                    }
+                    _services.addAll(snapshot.toObjects(Service::class.java))
                     fetchIncomingBookings()
                 }
             }
@@ -61,7 +67,7 @@ class ProviderViewModel : ViewModel() {
                 if (error != null) return@addSnapshotListener
                 
                 if (snapshot != null) {
-                    val allBookings = snapshot.documents.mapNotNull { it.toObject(Booking::class.java) }
+                    val allBookings = snapshot.toObjects(Booking::class.java)
                     val myServiceIds = _services.map { it.id }
                     
                     _incomingBookings.clear()
@@ -83,6 +89,7 @@ class ProviderViewModel : ViewModel() {
 
     fun addService(name: String, description: String, duration: Int, price: Double) {
         val providerId = auth.currentUser?.uid ?: return
+        val bId = currentUser?.businessId ?: ""
         val serviceId = UUID.randomUUID().toString()
         
         val newService = Service(
@@ -91,15 +98,29 @@ class ProviderViewModel : ViewModel() {
             description = description,
             durationMinutes = duration,
             price = price,
-            providerId = providerId
+            providerId = providerId,
+            businessId = bId
         )
         
         db.collection("services").document(serviceId).set(newService)
     }
 
+    fun updateService(serviceId: String, name: String, description: String, duration: Int, price: Double) {
+        db.collection("services").document(serviceId)
+            .update(
+                "name", name,
+                "description", description,
+                "durationMinutes", duration,
+                "price", price
+            )
+    }
+
+    fun deleteService(serviceId: String) {
+        db.collection("services").document(serviceId).delete()
+    }
+
     private fun calculateStats() {
         var total = 0.0
-        // Calcola il fatturato basato sulle prenotazioni completate
         val completedBookings = _incomingBookings.filter { it.status == "Completed" }
         
         for (booking in completedBookings) {
