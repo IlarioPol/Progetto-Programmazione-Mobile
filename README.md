@@ -1,6 +1,6 @@
 # 📌 Progetto Programmazione Mobile - Prenotazione Servizi
 
-Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, progettata per la gestione professionale di prenotazioni tra Clienti, Emettitori (Provider) e Responsabili (Manager).
+Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, progettata per la gestione professionale di prenotazioni tra Clienti, Professionisti (Provider) e Titolari (Manager).
 
 ---
 
@@ -29,45 +29,43 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
 | **Ruoli Multipli** | Gestione accessi per Cliente, Provider e Manager. | ✅ |
-| **Sistema Inviti** | Il Manager può invitare un Provider tramite email. | ✅ |
-| **Accettazione Inviti** | Dialog automatico lato Provider per accettare la supervisione. | ✅ |
-| **Binding Manager-User** | Collegamento logico nel DB tra dipendente e supervisore. | ✅ |
+| **Business Setup** | Schermata di configurazione Azienda per il Manager (Nome, Categoria). | ✅ |
+| **Sistema Inviti** | Il Manager invita Provider alla propria Azienda via email. | ✅ |
+| **Accettazione Inviti** | Binding automatico tra Provider, Manager e Business ID. | ✅ |
 
 ### 📅 3. Flusso Prenotazioni (Booking Flow)
 | Fase | Attore | Descrizione | Stato |
 | :--- | :--- | :--- | :---: |
-| **Richiesta** | Cliente | Selezione servizio e invio proposta data/ora (Stato: *Pending*). | ✅ |
+| **Richiesta** | Cliente | Selezione servizio e invio proposta data/ora. | ✅ |
 | **Notifica** | Provider | Ricezione automatica della richiesta nella dashboard. | ✅ |
-| **Approvazione** | Provider | Accettazione della richiesta (Stato: *Confirmed*). | ✅ |
-| **Rifiuto** | Provider | Rifiuto della richiesta (Stato: *Rejected*). | ✅ |
-| **Completamento** | Provider | Chiusura dell'appuntamento eseguito (Stato: *Completed*). | ✅ |
-| **Feedback** | Cliente | Invio recensione post-servizio. | ✅ |
-| **Cancellazione** | Entrambi | Possibilità di annullare un impegno prima della data prevista. | ⏳ |
+| **Approvazione** | Provider | Accettazione (Confirmed) o Rifiuto (Rejected) della richiesta. | ✅ |
+| **Completamento** | Provider | Chiusura dell'appuntamento con aggiornamento fatturato. | ✅ |
+| **Feedback** | Cliente | Invio recensione e valutazione (1-5 stelle). | ✅ |
+| **Cancellazione** | Cliente | Possibilità di annullare una prenotazione prima dell'esecuzione. | ⏳ |
 
-### 🛠️ 4. Funzionalità per Ruolo
+### 🛠️ 4. Funzionalità Avanzate per Ruolo
 
 #### 👤 Cliente (User)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Esplorazione** | Ricerca e filtri sui servizi caricati dai Provider. | ✅ |
-| **Tracking** | Monitoraggio in tempo reale dello stato (Pending/Confirmed/Rejected). | ✅ |
-| **Agenda Personale** | Vista dei prossimi appuntamenti confermati. | ✅ |
-| **Recensioni** | Sistema di feedback per i servizi conclusi. | ✅ |
+| **Ricerca Cross-Entity** | Cerca contemporaneamente per Nome Azienda, Professionista o Servizio. | ⏳ |
+| **Filtri Macro-Categoria** | Navigazione strutturata (es. Medicina, Legal, Beauty). | ✅ |
+| **Business Page** | Pagina dettaglio dell'azienda con lista del team e catalogo servizi. | ⏳ |
+| **Tracking Agenda** | Vista dei propri impegni futuri con stato aggiornato. | ✅ |
 
 #### 💼 Emettitore (Provider)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Catalogo Servizi** | Creazione e modifica servizi (Nome, Prezzo, Durata). | ✅ |
-| **Gestione Agenda** | Dashboard per accettare/rifiutare le prenotazioni in arrivo. | ✅ |
-| **Statistiche** | Monitoraggio guadagni e performance personali. | ✅ |
-| **Feedback** | Visualizzazione delle recensioni ricevute dai clienti. | ✅ |
+| **Gestione Catalogo** | CRUD completo (Aggiungi, Modifica, Elimina) dei propri servizi. | ✅ |
+| **Dashboard Agenda** | Gestione delle richieste in entrata e storico lavori. | ✅ |
+| **Statistiche Personali** | Monitoraggio dei propri guadagni e delle recensioni ricevute. | ✅ |
 
 #### 👑 Responsabile (Manager)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Supervisione Team** | Lista dei Provider associati e stato inviti. | ✅ |
-| **Monitoraggio Servizi** | Visualizzazione dei cataloghi dei propri Provider. | ⏳ |
-| **Analisi Globale** | Statistiche di fatturato aggregate per l'intero team. | ⏳ |
+| **Supervisione Team** | Monitoraggio dell'elenco dei professionisti associati. | ✅ |
+| **Analytics Team** | Visualizzazione statistiche individuali per ogni dipendente. | ⏳ |
+| **Azienda Analytics** | Dashboard fatturato totale, trend prenotazioni e media voti azienda. | ⏳ |
 
 ---
 
@@ -78,5 +76,12 @@ Puoi utilizzare i seguenti account per testare le funzionalità senza registrart
 - **Manager**: `bzgpgvpqubeppqldrw@vtmpj.com`
 - **Provider**: `bkivqrltdlacxvlnej@onldm.net`
 - **Cliente**: `wanox64415@mypethealh.com`
+
+### 2. Guida ai Flussi
+1. **Manager**: Entra e configura l'azienda. Invita il provider tramite email.
+2. **Provider**: Accetta l'invito. Crea un servizio nel catalogo.
+3. **Cliente**: Cerca l'azienda o il servizio, prenota inserendo data/ora.
+4. **Provider**: Accetta la prenotazione e, una volta eseguita, segnala come "Completata".
+5. **Manager**: Controlla le statistiche di fatturato aggiornate.
 
 ---
