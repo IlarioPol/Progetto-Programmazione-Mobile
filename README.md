@@ -13,32 +13,68 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 
 ---
 
-## ✅ Funzionalità Già Implementate (Testate)
-- **Autenticazione Completa**: Registrazione con ruoli, Login, Verifica Email, Reset Password ed Eliminazione Account.
-- **Gerarchia Aziendale**: Setup Business (Manager), Sistema di Invito collaboratori e binding automatico Business-User.
-- **Gestione Catalogo**: CRUD completo (Crea, Leggi, Modifica, Elimina) dei servizi lato Professionista.
-- **Booking Flow**: Richiesta (Pending), Accettazione (Confirmed), Completamento (Completed), Rifiuto (Rejected) e Annullamento (Canceled).
-- **Feedback & Stats**: Sistema di recensioni reali e calcolo fatturato automatico basato sui lavori completati.
-- **Ricerca Intelligente**: Filtri per macro-categoria (Medicina, Beauty, ecc.) e ricerca testuale dinamica.
+## 📈 Roadmap di Sviluppo
+
+### 🔐 1. Autenticazione & Sicurezza
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Integrazione Firebase** | Collegamento reale a Firebase Auth e Firestore. | ✅ |
+| **Email Verification** | Invio link di verifica alla registrazione. | ✅ |
+| **Recupero Password** | Reset della password tramite link via email. | ✅ |
+| **Gestione Sessione** | Logout sicuro e persistenza utente. | ✅ |
+| **Sicurezza Profilo** | Modifica password ed eliminazione account. | ✅ |
+
+### 👑 2. Struttura Gerarchica & Business
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Business Setup** | Creazione dell'entità Azienda (Nome, Macro-Categoria). | ✅ |
+| **Gestione Team** | Sistema di inviti/accettazione tra Manager e Provider. | ✅ |
+| **Binding Gerarchico** | Collegamento logico tra Servizi, Professionisti e Azienda. | ✅ |
+| **Business Page** | Pagina dedicata all'azienda con lista team e catalogo completo. | ⏳ |
+
+### 📅 3. Sistema di Prenotazione Avanzato (Slots & Calendar)
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Working Hours** | Configurazione orari di apertura e durata slot per il Provider. | ⏳ |
+| **Slot Generation** | Generazione automatica degli slot liberi basata sull'orario. | ⏳ |
+| **Real-time Locking** | Impedire la prenotazione dello stesso slot a più utenti. | ⏳ |
+| **Slot Release** | Liberazione automatica dello slot in caso di cancellazione. | ⏳ |
+| **Booking UI** | Interfaccia a calendario per la scelta di giorni e ore disponibili. | ⏳ |
+| **Status Flow** | Ciclo completo: Pending -> Confirmed -> Completed/Canceled. | ✅ |
+
+### 🔍 4. Ricerca & Discovery
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Filtri Categoria** | Navigazione per settori (Medicina, Beauty, ecc.). | ✅ |
+| **Cross-Entity Search** | Ricerca globale per Nome Azienda, Professionista o Servizio. | ⏳ |
+| **Geolocalizzazione** | (Opzionale) Ricerca delle attività più vicine all'utente. | ⏳ |
+
+### 📊 5. Analytics & Feedback
+| Task | Descrizione | Stato |
+| :--- | :--- | :---: |
+| **Recensioni** | Sistema di valutazione e commenti post-servizio. | ✅ |
+| **Provider Stats** | Monitoraggio guadagni e lavori fatti per singolo professionista. | ✅ |
+| **Manager Dashboard** | Statistiche aggregate dell'intero team e fatturato aziendale. | ⏳ |
 
 ---
 
-## ⏳ Prossimi Obiettivi (Nuove Task)
+## 📱 Flusso per Ruolo
 
-### 📅 1. Logica Avanzata Slot & Calendario
-| Task | Descrizione | Priorità |
-| :--- | :--- | :---: |
-| **Configurazione Orari** | Il Provider imposta i propri orari di lavoro e pause per ogni giorno. | 🔥 Alta |
-| **Generazione Slot** | Algoritmo che calcola gli spazi liberi in base alla durata del servizio scelto. | 🔥 Alta |
-| **Blocco Concorrenza** | Impedire la prenotazione dello stesso orario a più utenti (Transazioni DB). | 🔥 Alta |
-| **Auto-Release** | Rilascio istantaneo dello slot nel calendario in caso di cancellazione. | Media |
+### 👤 Cliente (User)
+- Esplora per categorie o ricerca specifica.
+- Visualizza la **Business Page** per scegliere il professionista preferito.
+- Seleziona data e ora da un **calendario dinamico** di slot liberi.
+- Gestisce le cancellazioni e lascia feedback.
 
-### 🔍 2. Esplorazione Avanzata & Business Page
-| Task | Descrizione | Priorità |
-| :--- | :--- | :---: |
-| **Ricerca Cross-Entity** | Cerca contemporaneamente per Nome Azienda, Professionista o Servizio. | 🔥 Alta |
-| **Business Page** | Pagina dedicata dell'azienda con lista del team e catalogo completo servizi. | 🔥 Alta |
-| **Booking UI Grafica** | Interfaccia a calendario visivo per scegliere giorni e ore disponibili. | Media |
+### 💼 Professionista (Provider)
+- Definisce i propri orari di disponibilità.
+- Gestisce il catalogo servizi e l'agenda delle richieste.
+- Visualizza il proprio rendimento e i feedback ricevuti.
+
+### 👑 Titolare (Manager)
+- Amministra la struttura e invita nuovi collaboratori.
+- Monitora le performance di ogni dipendente.
+- Visualizza i trend di fatturato e la soddisfazione clienti globale.
 
 ---
 
