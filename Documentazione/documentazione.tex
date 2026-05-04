@@ -15,7 +15,7 @@
     \vspace*{-2.2cm}
 
     % Logo dell'università
-    \includegraphics[width=0.28\textwidth]{logo_univpm.png}\par\vspace{0.2cm}
+    \includegraphics[width=0.28\textwidth]{logo_univpm}\par\vspace{0.2cm}
 
     {\Large \textbf{UNIVERSITÀ POLITECNICA DELLE MARCHE}} \par
     \vspace{0.1cm}
@@ -51,6 +51,7 @@
 \newpage
 
 % --- PAGINA 3 E SUCCESSIVE: CONTENUTO ---
+
 \section{Descrizione in linguaggio naturale}
 
 \subsection{a. Descrizione del sistema, del funzionamento e dei requisiti in linguaggio naturale}
@@ -67,12 +68,6 @@ L'applicativo si distingue per una gestione granulare degli accessi basata su tr
     \item \textbf{Infrastruttura:} L'app utilizza \textbf{Firebase} (Authentication e Firestore) per la gestione dell'identità e dei dati in tempo reale.
 \end{itemize}
 
-\textbf{Requisiti principali:}
-\begin{itemize}[noitemsep]
-    \item \textbf{Funzionali:} Autenticazione sicura, gestione dei ruoli, operazioni CRUD sui servizi e sistema di prenotazione (\textit{Booking}).
-    \item \textbf{Non Funzionali:} Interfaccia reattiva (UI responsive), persistenza dei dati e sincronizzazione automatica.
-\end{itemize}
-
 \subsection{b. Glossario dei termini}
 \begin{description}[noitemsep]
     \item[Client] Utente che richiede servizi e gestisce le proprie prenotazioni.
@@ -81,8 +76,33 @@ L'applicativo si distingue per una gestione granulare degli accessi basata su tr
     \item[UserRole] Enumerazione tecnica che definisce le capacità operative dell'utente (CLIENT, PROVIDER, MANAGER).
     \item[Service] Entità che descrive la prestazione offerta, comprensiva di costo e tempo stimato.
     \item[Booking] Documento digitale che formalizza la richiesta di un servizio da parte di un Client a un Provider.
-    \item[Turnover (Fatturato)] Somma economica derivante esclusivamente dalle prenotazioni con stato "Completato".
+    \item[Turnover (Fatturato)] Somma economica derivante esclusivamente dalle prenotazioni con stato \("\)Completato\("\).
     \item[Firestore] Database NoSQL cloud utilizzato per la memorizzazione e sincronizzazione dei dati dei servizi e degli utenti.
 \end{description}
+
+\newpage
+\section{Analisi dei requisiti}
+\subsection{a. Requisiti funzionali}
+\subsection{b. Requisiti non funzionali}
+\subsection{c. Diagrammi dei casi d’uso}
+\subsection{d. Matrice di mapping}
+
+\newpage
+\section{Diagrammi di analisi}
+\subsection{a. Diagramma delle classi di analisi}
+\subsection{b. Diagrammi di sequenza}
+\subsection{c. Diagrammi di attività}
+
+\newpage
+\section{Diagrammi di progettazione}
+\subsection{a. Diagramma delle classi di progettazione}
+\subsection{b. Diagramma dei componenti}
+\subsection{c. Diagrammi delle macchine a stati}
+
+\newpage
+\section{Implementazione}
+\subsection{a. Diagramma di deployment}
+\subsection{b. Mockup}
+\subsection{c. Descrizione unit tests}
 
 \end{document}
