@@ -4,64 +4,85 @@
 \usepackage[italian]{babel}
 \usepackage{hyperref}
 \usepackage{enumitem}
-\title{1. Descrizione in linguaggio naturale}
-\date{}
+\usepackage{graphicx}
 
 \begin{document}
-\maketitle
 
-\section{Descrizione del sistema, del funzionamento e dei requisiti}
-Il sistema è un'applicazione mobile Android per la gestione di attività personali e/o di team. Consente all'utente di creare, modificare, eliminare e organizzare attività (task), assegnare priorità e scadenze, e sincronizzare i dati con un servizio remoto.
+% --- PAGINA 1: FRONTESPIZIO ---
+\begin{titlepage}
+    \enlargethispage{3.5cm}
+    \centering
+    \vspace*{-2.2cm}
 
-Funzionamento principale:
+    % Logo dell'università
+    \includegraphics[width=0.28\textwidth]{logo_univpm.png}\par\vspace{0.2cm}
+
+    {\Large \textbf{UNIVERSITÀ POLITECNICA DELLE MARCHE}} \par
+    \vspace{0.1cm}
+    {\large Corso di Laurea Triennale in Ingegneria Informatica e dell'Automazione}
+
+    \vspace{2.5cm}
+
+    {\large Progetto per l'esame del corso Programmazione Mobile} \par
+    \vspace{0.5cm}
+    {\Huge \textbf{NOME APP}} \par
+    \vspace{0.2cm}
+    {\large (Titolo da decidere)}
+
+    \vfill
+
+    \begin{flushright}
+        \large
+        \textbf{Autori:} \\
+        Ilario Polidori \\
+        Tomas Mosciatti \\
+        Gianlorenzo Lucioni
+    \end{flushright}
+
+    \vspace{0.5cm}
+
+    {\large Anno Accademico 2024/2025}
+
+\end{titlepage}
+
+% --- PAGINA 2: INDICE ---
+\newpage
+\tableofcontents
+\newpage
+
+% --- PAGINA 3 E SUCCESSIVE: CONTENUTO ---
+\section{Descrizione in linguaggio naturale}
+
+\subsection{a. Descrizione del sistema, del funzionamento e dei requisiti in linguaggio naturale}
+Il sistema è un'applicazione Android nativa sviluppata con \textbf{Jetpack Compose} progettata per connettere la domanda e l'offerta di servizi professionali.
+L'applicativo si distingue per una gestione granulare degli accessi basata su tre profili utente distinti: \textbf{Client}, \textbf{Provider} e \textbf{Manager}.
+
+\textbf{Funzionamento:}
 \begin{itemize}[noitemsep]
-    \item Registrazione e autenticazione utenti tramite credenziali; supporto token per sessioni persistenti.
-    \item Interfaccia utente che mostra liste di attività filtrabili e ordinabili.
-    \item Creazione e modifica task con titolo, descrizione, data di scadenza, priorità e stato.
-    \item Sincronizzazione bidirezionale con backend (REST API): invio modifiche locali e ricezione aggiornamenti remoti.
-    \item Supporto offline: le modifiche vengono salvate localmente (database locale) e sincronizzate quando la connettività è disponibile.
-    \item Notifiche locali/push per ricordare scadenze importanti.
+    \item \textbf{Registrazione e Sicurezza:} Gli utenti possono creare un account specificando il proprio ruolo.
+    Per garantire l'integrità del sistema, è implementato un processo di \textbf{verifica email} obbligatorio prima dell'accesso.
+    \item \textbf{Dashboard Personalizzate:} L'interfaccia si adatta dinamicamente al ruolo (\textit{UserRole}). Il Provider dispone di strumenti per la gestione del catalogo servizi e monitoraggio delle prenotazioni, mentre il Client ha una visione orientata alla ricerca e alla prenotazione.
+    \item \textbf{Gestione Attività:} Il Provider può aggiungere nuovi servizi definendo nome, descrizione, durata e prezzo.
+    Il sistema calcola automaticamente il \textbf{fatturato totale} basandosi sulle prenotazioni completate.
+    \item \textbf{Infrastruttura:} L'app utilizza \textbf{Firebase} (Authentication e Firestore) per la gestione dell'identità e dei dati in tempo reale.
 \end{itemize}
 
-Requisiti funzionali essenziali:
+\textbf{Requisiti principali:}
 \begin{itemize}[noitemsep]
-    \item RF1: Autenticazione utente (login/logout, registrazione).
-    \item RF2: CRUD per le attività.
-    \item RF3: Filtri e ordinamenti per visualizzare attività.
-    \item RF4: Sincronizzazione con servizio remoto e risoluzione conflitti basica.
-    \item RF5: Notifiche per scadenze.
+    \item \textbf{Funzionali:} Autenticazione sicura, gestione dei ruoli, operazioni CRUD sui servizi e sistema di prenotazione (\textit{Booking}).
+    \item \textbf{Non Funzionali:} Interfaccia reattiva (UI responsive), persistenza dei dati e sincronizzazione automatica.
 \end{itemize}
 
-Requisiti non funzionali:
-\begin{itemize}[noitemsep]
-    \item RNF1: Compatibilità con Android 8.0 (API 26) e successive.
-    \item RNF2: Risposta UI entro 200 ms per operazioni comuni.
-    \item RNF3: Sicurezza: comunicazione cifrata (HTTPS), memorizzazione sicura dei token.
-    \item RNF4: Scalabilità backend per gestire più utenti concorrenti.
-    \item RNF5: Accessibilità e supporto localizzazione (i18n).
-\end{itemize}
-
-Vincoli:
-\begin{itemize}[noitemsep]
-    \item Uso di una REST API standard per sincronizzazione.
-    \item Persistenza locale tramite SQLite/Room.
-    \item Autenticazione basata su token (es. JWT) o OAuth2.
-\end{itemize}
-
-\section{Glossario dei termini}
+\subsection{b. Glossario dei termini}
 \begin{description}[noitemsep]
-    \item[Utente] Persona che utilizza l'app.
-    \item[Task / Attività] Elemento gestibile dall'utente con titolo, descrizione, stato e scadenza.
-    \item[Autenticazione] Processo di verifica dell'identità dell'utente (login).
-    \item[Token (es. JWT)] Credenziale temporanea usata per autorizzare richieste al backend.
-    \item[API REST] Interfaccia HTTP per comunicazione client-server.
-    \item[Database locale] Archivio dati sul dispositivo (es. SQLite/Room) per supporto offline.
-    \item[Sincronizzazione] Processo di allineamento dati tra dispositivo e server.
-    \item[Push notification] Messaggio inviato dal server al dispositivo per avvisi in background.
-    \item[Endpoint] URL specifico dell'API che espone una funzionalità/back-end.
-    \item[CRUD] Operazioni Create, Read, Update, Delete.
-    \item[Backend] Server che gestisce logica, storage e API esposte all'app.
-    \item[Conflitto di sincronizzazione] Situazione in cui la stessa risorsa è cambiata contemporaneamente in locale e sul server.
+    \item[Client] Utente che richiede servizi e gestisce le proprie prenotazioni.
+    \item[Provider] Professionista incaricato di erogare i servizi e gestire la propria offerta economica.
+    \item[Manager] Profilo con privilegi di supervisione e coordinamento delle attività globali.
+    \item[UserRole] Enumerazione tecnica che definisce le capacità operative dell'utente (CLIENT, PROVIDER, MANAGER).
+    \item[Service] Entità che descrive la prestazione offerta, comprensiva di costo e tempo stimato.
+    \item[Booking] Documento digitale che formalizza la richiesta di un servizio da parte di un Client a un Provider.
+    \item[Turnover (Fatturato)] Somma economica derivante esclusivamente dalle prenotazioni con stato "Completato".
+    \item[Firestore] Database NoSQL cloud utilizzato per la memorizzazione e sincronizzazione dei dati dei servizi e degli utenti.
 \end{description}
 
 \end{document}
