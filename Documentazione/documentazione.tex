@@ -1,0 +1,108 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{graphicx}
+
+\begin{document}
+
+% --- PAGINA 1: FRONTESPIZIO ---
+\begin{titlepage}
+    \enlargethispage{3.5cm}
+    \centering
+    \vspace*{-2.2cm}
+
+    % Logo dell'università
+    \includegraphics[width=0.28\textwidth]{logo_univpm}\par\vspace{0.2cm}
+
+    {\Large \textbf{UNIVERSITÀ POLITECNICA DELLE MARCHE}} \par
+    \vspace{0.1cm}
+    {\large Corso di Laurea Triennale in Ingegneria Informatica e dell'Automazione}
+
+    \vspace{2.5cm}
+
+    {\large Progetto per l'esame del corso Programmazione Mobile} \par
+    \vspace{0.5cm}
+    {\Huge \textbf{NOME APP}} \par
+    \vspace{0.2cm}
+    {\large (Titolo da decidere)}
+
+    \vfill
+
+    \begin{flushright}
+        \large
+        \textbf{Autori:} \\
+        Ilario Polidori \\
+        Tomas Mosciatti \\
+        Gianlorenzo Lucioni
+    \end{flushright}
+
+    \vspace{0.5cm}
+
+    {\large Anno Accademico 2024/2025}
+
+\end{titlepage}
+
+% --- PAGINA 2: INDICE ---
+\newpage
+\tableofcontents
+\newpage
+
+% --- PAGINA 3 E SUCCESSIVE: CONTENUTO ---
+
+\section{Descrizione in linguaggio naturale}
+
+\subsection{a. Descrizione del sistema, del funzionamento e dei requisiti in linguaggio naturale}
+Il sistema è un'applicazione Android nativa sviluppata con \textbf{Jetpack Compose} progettata per connettere la domanda e l'offerta di servizi professionali.
+L'applicativo si distingue per una gestione granulare degli accessi basata su tre profili utente distinti: \textbf{Client}, \textbf{Provider} e \textbf{Manager}.
+
+\textbf{Funzionamento:}
+\begin{itemize}[noitemsep]
+    \item \textbf{Registrazione e Sicurezza:} Gli utenti possono creare un account specificando il proprio ruolo.
+    Per garantire l'integrità del sistema, è implementato un processo di \textbf{verifica email} obbligatorio prima dell'accesso.
+    \item \textbf{Dashboard Personalizzate:} L'interfaccia si adatta dinamicamente al ruolo (\textit{UserRole}). Il Provider dispone di strumenti per la gestione del catalogo servizi e monitoraggio delle prenotazioni, mentre il Client ha una visione orientata alla ricerca e alla prenotazione.
+    \item \textbf{Gestione Attività:} Il Provider può aggiungere nuovi servizi definendo nome, descrizione, durata e prezzo.
+    Il sistema calcola automaticamente il \textbf{fatturato totale} basandosi sulle prenotazioni completate.
+    \item \textbf{Infrastruttura:} L'app utilizza \textbf{Firebase} (Authentication e Firestore) per la gestione dell'identità e dei dati in tempo reale.
+\end{itemize}
+
+\subsection{b. Glossario dei termini}
+\begin{description}[noitemsep]
+    \item[Client] Utente che richiede servizi e gestisce le proprie prenotazioni.
+    \item[Provider] Professionista incaricato di erogare i servizi e gestire la propria offerta economica.
+    \item[Manager] Profilo con privilegi di supervisione e coordinamento delle attività globali.
+    \item[UserRole] Enumerazione tecnica che definisce le capacità operative dell'utente (CLIENT, PROVIDER, MANAGER).
+    \item[Service] Entità che descrive la prestazione offerta, comprensiva di costo e tempo stimato.
+    \item[Booking] Documento digitale che formalizza la richiesta di un servizio da parte di un Client a un Provider.
+    \item[Turnover (Fatturato)] Somma economica derivante esclusivamente dalle prenotazioni con stato \("\)Completato\("\).
+    \item[Firestore] Database NoSQL cloud utilizzato per la memorizzazione e sincronizzazione dei dati dei servizi e degli utenti.
+\end{description}
+
+\newpage
+\section{Analisi dei requisiti}
+\subsection{a. Requisiti funzionali}
+\subsection{b. Requisiti non funzionali}
+\subsection{c. Diagrammi dei casi d’uso}
+\subsection{d. Matrice di mapping}
+
+\newpage
+\section{Diagrammi di analisi}
+\subsection{a. Diagramma delle classi di analisi}
+\subsection{b. Diagrammi di sequenza}
+\subsection{c. Diagrammi di attività}
+
+\newpage
+\section{Diagrammi di progettazione}
+\subsection{a. Diagramma delle classi di progettazione}
+\subsection{b. Diagramma dei componenti}
+\subsection{c. Diagrammi delle macchine a stati}
+
+\newpage
+\section{Implementazione}
+\subsection{a. Diagramma di deployment}
+\subsection{b. Mockup}
+\subsection{c. Descrizione unit tests}
+
+\end{document}
