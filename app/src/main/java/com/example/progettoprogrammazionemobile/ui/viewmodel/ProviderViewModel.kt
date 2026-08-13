@@ -53,15 +53,15 @@ class ProviderViewModel : ViewModel() {
                 
                 if (snapshot != null) {
                     _services.clear()
-                    _services.addAll(snapshot.toObjects(Service::class.java))
+                    val myServices = snapshot.toObjects(Service::class.java)
+                    _services.addAll(myServices)
                     fetchIncomingBookings()
+                    fetchReviews(myServices.map { it.id })
                 }
             }
     }
 
     private fun fetchIncomingBookings() {
-        val providerId = auth.currentUser?.uid ?: return
-        
         db.collection("bookings")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
@@ -73,6 +73,23 @@ class ProviderViewModel : ViewModel() {
                     _incomingBookings.clear()
                     _incomingBookings.addAll(allBookings.filter { myServiceIds.contains(it.serviceId) })
                     calculateStats()
+                }
+            }
+    }
+
+    private fun fetchReviews(serviceIds: List<String>) {
+        if (serviceIds.isEmpty()) return
+        
+        // Firestore 'in' query supports up to 10 elements. For simplicity, we fetch all and filter, 
+        // or we could chunk if the number of services is high.
+        db.collection("reviews")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                
+                if (snapshot != null) {
+                    val allReviews = snapshot.toObjects(Review::class.java)
+                    _reviews.clear()
+                    _reviews.addAll(allReviews.filter { serviceIds.contains(it.serviceId) })
                 }
             }
     }
