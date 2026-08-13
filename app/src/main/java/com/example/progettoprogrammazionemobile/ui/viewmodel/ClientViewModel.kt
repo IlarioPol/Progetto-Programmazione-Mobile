@@ -1,5 +1,6 @@
 package com.example.progettoprogrammazionemobile.ui.viewmodel
 
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -26,8 +27,11 @@ class ClientViewModel : ViewModel() {
     private val _myBookings = mutableStateListOf<Booking>()
     val myBookings: List<Booking> = _myBookings
 
-    var searchQuery = mutableStateOf("")
-    var selectedCategory = mutableStateOf("Tutte")
+    private val _searchQuery = mutableStateOf("")
+    val searchQuery: State<String> = _searchQuery
+
+    private val _selectedCategory = mutableStateOf("Tutte")
+    val selectedCategory: State<String> = _selectedCategory
 
     init {
         fetchAllBusinesses()
@@ -58,18 +62,18 @@ class ClientViewModel : ViewModel() {
     }
 
     fun onSearchQueryChange(newQuery: String) {
-        searchQuery.value = newQuery
+        _searchQuery.value = newQuery
         applyFilters()
     }
 
     fun onCategorySelected(category: String) {
-        selectedCategory.value = category
+        _selectedCategory.value = category
         applyFilters()
     }
 
     private fun applyFilters() {
-        val query = searchQuery.value.lowercase()
-        val cat = selectedCategory.value
+        val query = _searchQuery.value.lowercase()
+        val cat = _selectedCategory.value
 
         // 1. Filtra Aziende
         availableBusinesses.clear()
@@ -123,18 +127,21 @@ class ClientViewModel : ViewModel() {
     fun cancelBooking(bookingId: String) {
         db.collection("bookings").document(bookingId)
             .update("status", "Canceled")
-            .addOnSuccessListener {
-                // Il listener aggiornerà la lista automaticamente
-            }
     }
 
     fun addReview(serviceId: String, serviceName: String, rating: Int, comment: String) {
         val clientId = auth.currentUser?.uid ?: return
         val reviewId = UUID.randomUUID().toString()
+        
+        val clientName = auth.currentUser?.displayName.let { 
+            if (it.isNullOrBlank()) "Cliente" else it 
+        }
+
         val newReview = Review(
             id = reviewId,
             serviceId = serviceId,
-            clientName = auth.currentUser?.displayName ?: "Cliente",
+            serviceName = serviceName,
+            clientName = clientName,
             rating = rating,
             comment = comment,
             date = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date())
