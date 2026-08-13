@@ -29,8 +29,7 @@ class AuthViewModel : ViewModel() {
     private val _authState = mutableStateOf<AuthState>(AuthState.Idle)
     val authState: State<AuthState> = _authState
 
-    // Stato per l'invito pendente
-    private val _pendingInvitation = mutableStateOf<String?>(null) // businessId
+    private val _pendingInvitation = mutableStateOf<String?>(null)
     val pendingInvitation: State<String?> = _pendingInvitation
 
     private val _userBusiness = mutableStateOf<Business?>(null)
@@ -47,7 +46,7 @@ class AuthViewModel : ViewModel() {
                 if (currentUser.isEmailVerified) {
                     fetchUserData(currentUser.uid)
                 } else {
-                    _authState.value = AuthState.Error("Per favore verifica la tua email")
+                    _authState.value = AuthState.Idle // Non bloccare in errore all'avvio
                 }
             }
         }
@@ -62,10 +61,12 @@ class AuthViewModel : ViewModel() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
                 val user = result.user
-                if (user != null && user.isEmailVerified) {
-                    fetchUserData(user.uid)
-                } else if (user != null) {
-                    _authState.value = AuthState.Error("Email non verificata. Controlla la tua posta.")
+                if (user != null) {
+                    if (user.isEmailVerified) {
+                        fetchUserData(user.uid)
+                    } else {
+                        _authState.value = AuthState.Error("Email non verificata. Controlla la tua posta.")
+                    }
                 }
             }
             .addOnFailureListener { exception ->
@@ -94,6 +95,12 @@ class AuthViewModel : ViewModel() {
                             .addOnSuccessListener {
                                 _authState.value = AuthState.VerificationEmailSent
                             }
+                            .addOnFailureListener { e ->
+                                _authState.value = AuthState.Error("Errore salvataggio dati: ${e.localizedMessage}")
+                            }
+                    }
+                    ?.addOnFailureListener { e ->
+                        _authState.value = AuthState.Error("Errore invio email: ${e.localizedMessage}")
                     }
             }
             .addOnFailureListener { exception ->
@@ -106,14 +113,13 @@ class AuthViewModel : ViewModel() {
             _authState.value = AuthState.Error("Per favore inserisci la tua email")
             return
         }
-
         _authState.value = AuthState.Loading
         auth.sendPasswordResetEmail(email)
             .addOnSuccessListener {
                 _authState.value = AuthState.PasswordResetSent
             }
             .addOnFailureListener { exception ->
-                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore nell'invio dell'email di reset")
+                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore reset password")
             }
     }
 
@@ -138,7 +144,6 @@ class AuthViewModel : ViewModel() {
                     .addOnSuccessListener {
                         _userBusiness.value = business
                         _authState.value = AuthState.BusinessCreated
-                        // Aggiorniamo i dati utente senza resettare lo stato a Loading immediatamente
                         refreshUserDataSilent(managerId)
                     }
             }
@@ -148,50 +153,40 @@ class AuthViewModel : ViewModel() {
     }
 
     fun updatePassword(newPassword: String) {
-        if (newPassword.isBlank() || newPassword.length < 6) {
+        if (newPassword.length < 6) {
             _authState.value = AuthState.Error("La password deve essere di almeno 6 caratteri")
             return
         }
-
         _authState.value = AuthState.Loading
-        val user = auth.currentUser
-        user?.updatePassword(newPassword)
+        auth.currentUser?.updatePassword(newPassword)
             ?.addOnSuccessListener {
                 _authState.value = AuthState.PasswordUpdated
             }
             ?.addOnFailureListener { exception ->
-                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore nell'aggiornamento della password.")
+                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore aggiornamento password")
             }
     }
 
     fun deleteAccount() {
+        val user = auth.currentUser ?: return
+        val userId = user.uid
         _authState.value = AuthState.Loading
-        val user = auth.currentUser
-        val userId = user?.uid
-
-        if (userId != null) {
-            db.collection("users").document(userId).delete()
-                .addOnSuccessListener {
-                    user.delete()
-                        .addOnSuccessListener {
-                            _authState.value = AuthState.AccountDeleted
-                        }
-                        .addOnFailureListener { exception ->
-                            _authState.value = AuthState.Error("Errore nell'eliminazione dell'account.")
-                        }
-                }
-        }
+        
+        db.collection("users").document(userId).delete()
+            .addOnSuccessListener {
+                user.delete()
+                    .addOnSuccessListener { _authState.value = AuthState.AccountDeleted }
+                    .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione account Auth") }
+            }
+            .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione dati database") }
     }
 
     private fun refreshUserDataSilent(uid: String) {
         db.collection("users").document(uid).get()
             .addOnSuccessListener { document ->
-                val user = document.toObject(User::class.java)
-                if (user != null) {
+                document.toObject(User::class.java)?.let { user ->
                     _authState.value = AuthState.Success(user)
-                    if (user.businessId != null) {
-                        fetchBusinessData(user.businessId)
-                    }
+                    user.businessId?.let { fetchBusinessData(it) }
                 }
             }
     }
@@ -200,19 +195,18 @@ class AuthViewModel : ViewModel() {
         _authState.value = AuthState.Loading
         db.collection("users").document(uid).get()
             .addOnSuccessListener { document ->
-                val user = document.toObject(User::class.java)
-                if (user != null) {
+                document.toObject(User::class.java)?.let { user ->
                     _authState.value = AuthState.Success(user)
-                    if (user.businessId != null) {
-                        fetchBusinessData(user.businessId)
-                    }
+                    user.businessId?.let { fetchBusinessData(it) }
                     if (user.role == UserRole.PROVIDER && user.businessId == null) {
                         checkForInvitations(user.email)
                     }
+                } ?: run {
+                    _authState.value = AuthState.Error("Utente non trovato nel database")
                 }
             }
-            .addOnFailureListener { exception ->
-                _authState.value = AuthState.Error("Errore nel recupero dati: ${exception.localizedMessage}")
+            .addOnFailureListener { e ->
+                _authState.value = AuthState.Error("Errore recupero dati: ${e.localizedMessage}")
             }
     }
 
@@ -230,34 +224,6 @@ class AuthViewModel : ViewModel() {
                     _pendingInvitation.value = doc.getString("businessId")
                 }
             }
-    }
-
-    fun acceptInvitation() {
-        val businessId = _pendingInvitation.value ?: return
-        val userId = auth.currentUser?.uid ?: return
-        val email = auth.currentUser?.email ?: return
-
-        db.runTransaction { transaction ->
-            val userRef = db.collection("users").document(userId)
-            val businessRef = db.collection("businesses").document(businessId)
-            val inviteRef = db.collection("invitations").document(email)
-
-            val business = transaction.get(businessRef).toObject(Business::class.java)
-            val updatedProviders = (business?.providerIds ?: emptyList()) + userId
-
-            transaction.update(userRef, "businessId", businessId)
-            transaction.update(businessRef, "providerIds", updatedProviders)
-            transaction.delete(inviteRef)
-        }.addOnSuccessListener {
-            _pendingInvitation.value = null
-            fetchUserData(userId)
-        }
-    }
-
-    fun declineInvitation() {
-        val email = auth.currentUser?.email ?: return
-        db.collection("invitations").document(email).delete()
-        _pendingInvitation.value = null
     }
 
     fun logout() {
