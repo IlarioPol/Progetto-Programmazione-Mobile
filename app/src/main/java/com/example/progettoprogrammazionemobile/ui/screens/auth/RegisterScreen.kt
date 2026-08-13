@@ -26,31 +26,24 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(UserRole.CLIENT) }
-    var showVerificationMessage by remember { mutableStateOf(false) }
     
     val authState by viewModel.authState
 
     LaunchedEffect(authState) {
-        when (val state = authState) {
-            is AuthState.Success -> {
-                onRegisterSuccess(state.user.role)
-                viewModel.resetState()
-            }
-            is AuthState.VerificationEmailSent -> {
-                showVerificationMessage = true
-            }
-            else -> {}
+        val state = authState
+        if (state is AuthState.Success) {
+            onRegisterSuccess(state.user.role)
+            viewModel.resetState()
         }
     }
 
-    if (showVerificationMessage) {
+    if (authState is AuthState.VerificationEmailSent) {
         AlertDialog(
             onDismissRequest = { /* Don't dismiss by clicking outside */ },
             title = { Text("Verifica Email") },
             text = { Text("Ti abbiamo inviato un'email di verifica a $email. Per favore controlla la tua posta e clicca sul link prima di accedere.") },
             confirmButton = {
                 Button(onClick = {
-                    showVerificationMessage = false
                     viewModel.resetState()
                     onLoginClick()
                 }) {
@@ -106,26 +99,21 @@ fun RegisterScreen(
 
         Text("Iscriviti come:", style = MaterialTheme.typography.titleMedium)
         Column(Modifier.selectableGroup()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = selectedRole == UserRole.CLIENT,
-                    onClick = { selectedRole = UserRole.CLIENT }
-                )
-                Text("Cliente", modifier = Modifier.padding(start = 8.dp))
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = selectedRole == UserRole.PROVIDER,
-                    onClick = { selectedRole = UserRole.PROVIDER }
-                )
-                Text("Emettitore Servizi (Provider)", modifier = Modifier.padding(start = 8.dp))
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = selectedRole == UserRole.MANAGER,
-                    onClick = { selectedRole = UserRole.MANAGER }
-                )
-                Text("Responsabile (Manager)", modifier = Modifier.padding(start = 8.dp))
+            UserRole.entries.forEach { role ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = selectedRole == role,
+                        onClick = { selectedRole = role }
+                    )
+                    Text(
+                        text = when(role) {
+                            UserRole.CLIENT -> "Cliente"
+                            UserRole.PROVIDER -> "Emettitore Servizi (Provider)"
+                            UserRole.MANAGER -> "Responsabile (Manager)"
+                        },
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
         }
 

@@ -38,7 +38,7 @@ fun ProviderHomeScreen(
     providerViewModel: ProviderViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
     var serviceToEdit by remember { mutableStateOf<Service?>(null) }
     
@@ -112,9 +112,9 @@ fun ProviderHomeScreen(
     }
 
     // Dialog per invito pendente
-    pendingInviteManagerId?.let { managerId ->
+    if (pendingInviteManagerId != null) {
         AlertDialog(
-            onDismissRequest = { /* Obbliga a scegliere */ },
+            onDismissRequest = { },
             title = { Text("Invito Supervisione") },
             text = { Text("Un Responsabile desidera supervisionare il tuo account. Accettando, potrà visualizzare le tue statistiche e i tuoi servizi.") },
             confirmButton = {

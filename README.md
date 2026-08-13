@@ -46,7 +46,7 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
 | **Filtri Categoria** | Navigazione per settori (Medicina, Beauty, ecc.). | ✅ |
-| **Cross-Entity Search** | Ricerca globale per Nome Azienda, Professionista o Servizio. | ⏳ |
+| **Cross-Entity Search** | Ricerca globale per Nome Azienda, Professionista o Servizio. | ✅ |
 | **Geolocalizzazione** | (Opzionale) Ricerca delle attività più vicine all'utente. | ⏳ |
 
 ### 📊 5. Analytics & Feedback
