@@ -46,7 +46,7 @@ class AuthViewModel : ViewModel() {
                 if (currentUser.isEmailVerified) {
                     fetchUserData(currentUser.uid)
                 } else {
-                    _authState.value = AuthState.Idle // Non bloccare in errore all'avvio
+                    _authState.value = AuthState.Idle
                 }
             }
         }
@@ -179,6 +179,34 @@ class AuthViewModel : ViewModel() {
                     .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione account Auth") }
             }
             .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione dati database") }
+    }
+
+    fun acceptInvitation() {
+        val businessId = _pendingInvitation.value ?: return
+        val userId = auth.currentUser?.uid ?: return
+        val email = auth.currentUser?.email ?: return
+
+        db.runTransaction { transaction ->
+            val userRef = db.collection("users").document(userId)
+            val businessRef = db.collection("businesses").document(businessId)
+            val inviteRef = db.collection("invitations").document(email)
+
+            val business = transaction.get(businessRef).toObject(Business::class.java)
+            val updatedProviders = (business?.providerIds ?: emptyList()) + userId
+
+            transaction.update(userRef, "businessId", businessId)
+            transaction.update(businessRef, "providerIds", updatedProviders)
+            transaction.delete(inviteRef)
+        }.addOnSuccessListener {
+            _pendingInvitation.value = null
+            fetchUserData(userId)
+        }
+    }
+
+    fun declineInvitation() {
+        val email = auth.currentUser?.email ?: return
+        db.collection("invitations").document(email).delete()
+        _pendingInvitation.value = null
     }
 
     private fun refreshUserDataSilent(uid: String) {

@@ -1,6 +1,5 @@
 package com.example.progettoprogrammazionemobile.ui.screens.client
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -35,9 +34,9 @@ fun ClientHomeScreen(
     clientViewModel: ClientViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     var selectedServiceForBooking by remember { mutableStateOf<Service?>(null) }
-    var selectedServiceForReview by remember { mutableStateOf<String?>(null) }
+    var bookingForReview by remember { mutableStateOf<Booking?>(null) }
 
     Scaffold(
         topBar = {
@@ -76,7 +75,7 @@ fun ClientHomeScreen(
         Column(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
                 0 -> ExploreTab(clientViewModel) { selectedServiceForBooking = it }
-                1 -> MyBookingsTab(clientViewModel) { selectedServiceForReview = it }
+                1 -> MyBookingsTab(clientViewModel) { bookingForReview = it }
             }
         }
     }
@@ -92,13 +91,13 @@ fun ClientHomeScreen(
         )
     }
 
-    selectedServiceForReview?.let { serviceName ->
+    bookingForReview?.let { booking ->
         ReviewDialog(
-            serviceName = serviceName,
-            onDismiss = { selectedServiceForReview = null },
+            serviceName = booking.serviceName,
+            onDismiss = { bookingForReview = null },
             onConfirm = { rating, comment ->
-                clientViewModel.addReview("id", serviceName, rating, comment)
-                selectedServiceForReview = null
+                clientViewModel.addReview(booking.serviceId, booking.serviceName, rating, comment)
+                bookingForReview = null
             }
         )
     }
@@ -115,7 +114,6 @@ fun ExploreTab(viewModel: ClientViewModel, onBookClick: (Service) -> Unit) {
     val services = viewModel.availableServices
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Search Bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { viewModel.onSearchQueryChange(it) },
@@ -127,7 +125,6 @@ fun ExploreTab(viewModel: ClientViewModel, onBookClick: (Service) -> Unit) {
             shape = MaterialTheme.shapes.medium
         )
 
-        // Categories Row
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
@@ -226,7 +223,7 @@ fun ServiceCard(service: Service, onBookClick: (Service) -> Unit) {
 }
 
 @Composable
-fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
+fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (Booking) -> Unit) {
     val bookings = viewModel.myBookings
     var bookingToCancel by remember { mutableStateOf<Booking?>(null) }
 
@@ -292,7 +289,7 @@ fun MyBookingsTab(viewModel: ClientViewModel, onReviewClick: (String) -> Unit) {
                     if (booking.status == "Completed") {
                         Spacer(modifier = Modifier.height(12.dp))
                         OutlinedButton(
-                            onClick = { onReviewClick(booking.serviceName) },
+                            onClick = { onReviewClick(booking) },
                             modifier = Modifier.align(Alignment.End)
                         ) {
                             Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
