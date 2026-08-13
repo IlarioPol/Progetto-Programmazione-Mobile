@@ -31,9 +31,9 @@ fun RegisterScreen(
     val authState by viewModel.authState
 
     LaunchedEffect(authState) {
-        when (authState) {
+        when (val state = authState) {
             is AuthState.Success -> {
-                onRegisterSuccess((authState as AuthState.Success).user.role)
+                onRegisterSuccess(state.user.role)
                 viewModel.resetState()
             }
             is AuthState.VerificationEmailSent -> {
@@ -131,15 +131,16 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        if (authState is AuthState.Error) {
+        val state = authState
+        if (state is AuthState.Error) {
             Text(
-                text = (authState as AuthState.Error).message,
+                text = state.message,
                 color = Color.Red,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
 
-        if (authState is AuthState.Loading) {
+        if (state is AuthState.Loading) {
             CircularProgressIndicator()
         } else {
             Button(
