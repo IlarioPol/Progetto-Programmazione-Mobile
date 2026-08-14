@@ -6,16 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,8 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.progettoprogrammazionemobile.data.model.Service
+import com.example.progettoprogrammazionemobile.data.model.DayAvailability
+import com.example.progettoprogrammazionemobile.data.model.TimeRange
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 import com.example.progettoprogrammazionemobile.ui.viewmodel.ProviderViewModel
 import java.util.Locale
@@ -89,10 +83,16 @@ fun ProviderHomeScreen(
                     onClick = { selectedTab = 2 }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Info, contentDescription = null) },
-                    label = { Text("Stats") },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                    label = { Text("Orari") },
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Info, contentDescription = null) },
+                    label = { Text("Stats") },
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 }
                 )
             }
         }
@@ -106,12 +106,12 @@ fun ProviderHomeScreen(
                 )
                 1 -> ProviderBookingsTab(providerViewModel)
                 2 -> ReviewsListTab(providerViewModel)
-                3 -> StatisticsTab(providerViewModel)
+                3 -> AvailabilityTab(providerViewModel)
+                4 -> StatisticsTab(providerViewModel)
             }
         }
     }
 
-    // Dialog per invito pendente
     if (pendingInviteManagerId != null) {
         AlertDialog(
             onDismissRequest = { },
@@ -320,6 +320,173 @@ fun ReviewsListTab(viewModel: ProviderViewModel) {
                     Text(review.date, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(review.comment)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AvailabilityTab(viewModel: ProviderViewModel) {
+    val availability by viewModel.availability
+    val days = listOf("Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica")
+
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        item {
+            Text("Gestione Orari di Lavoro", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("Definisci quando sei disponibile per le prenotazioni", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        availability?.let { avail ->
+            items(avail.weeklyAvailability, key = { it.dayOfWeek }) { dayAvail ->
+                DayAvailabilityItem(
+                    dayName = days[dayAvail.dayOfWeek - 1],
+                    dayAvailability = dayAvail,
+                    onUpdate = { updatedDay ->
+                        val newList = avail.weeklyAvailability.map {
+                            if (it.dayOfWeek == updatedDay.dayOfWeek) updatedDay else it
+                        }
+                        viewModel.updateAvailability(avail.copy(weeklyAvailability = newList))
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DayAvailabilityItem(
+    dayName: String,
+    dayAvailability: DayAvailability,
+    onUpdate: (DayAvailability) -> Unit
+) {
+    var showTimePickerForRangeIndex by remember { mutableStateOf<Int?>(null) }
+    var isStartTimePicker by remember { mutableStateOf(true) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dayAvailability.workDay) MaterialTheme.colorScheme.surface else Color(0xFFF5F5F5)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(dayName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Switch(
+                    checked = dayAvailability.workDay,
+                    onCheckedChange = { onUpdate(dayAvailability.copy(workDay = it)) }
+                )
+            }
+
+            if (dayAvailability.workDay) {
+                dayAvailability.timeRanges.forEachIndexed { index, range ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        AssistChip(
+                            onClick = { 
+                                showTimePickerForRangeIndex = index
+                                isStartTimePicker = true
+                            },
+                            label = { Text(range.startTime) }
+                        )
+                        Text(" - ", modifier = Modifier.padding(horizontal = 8.dp))
+                        AssistChip(
+                            onClick = { 
+                                showTimePickerForRangeIndex = index
+                                isStartTimePicker = false
+                            },
+                            label = { Text(range.endTime) }
+                        )
+                        
+                        Spacer(modifier = Modifier.weight(1f))
+                        
+                        if (dayAvailability.timeRanges.size > 1) {
+                            IconButton(onClick = {
+                                val newList = dayAvailability.timeRanges.toMutableList()
+                                newList.removeAt(index)
+                                onUpdate(dayAvailability.copy(timeRanges = newList))
+                            }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Rimuovi")
+                            }
+                        }
+                    }
+                }
+                
+                TextButton(
+                    onClick = {
+                        val newList = dayAvailability.timeRanges.toMutableList()
+                        newList.add(TimeRange("09:00", "18:00"))
+                        onUpdate(dayAvailability.copy(timeRanges = newList))
+                    },
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Text("Aggiungi Fascia Oraria")
+                }
+            } else {
+                Text("Chiuso", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+
+    if (showTimePickerForRangeIndex != null) {
+        val rangeIndex = showTimePickerForRangeIndex!!
+        val currentRange = dayAvailability.timeRanges[rangeIndex]
+        val currentTime = if (isStartTimePicker) currentRange.startTime else currentRange.endTime
+        val parts = currentTime.split(":")
+        val initialHour = parts.getOrNull(0)?.toIntOrNull() ?: 9
+        val initialMinute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+
+        val timePickerState = rememberTimePickerState(
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            is24Hour = true
+        )
+
+        Dialog(onDismissRequest = { showTimePickerForRangeIndex = null }) {
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = 6.dp,
+                modifier = Modifier.width(IntrinsicSize.Min)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = if (isStartTimePicker) "Seleziona inizio" else "Seleziona fine",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TimePicker(state = timePickerState)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = { showTimePickerForRangeIndex = null }) {
+                            Text("Annulla")
+                        }
+                        TextButton(onClick = {
+                            val newTime = String.format(Locale.getDefault(), "%02d:%02d", timePickerState.hour, timePickerState.minute)
+                            val newList = dayAvailability.timeRanges.toMutableList()
+                            val updatedRange = if (isStartTimePicker) {
+                                currentRange.copy(startTime = newTime)
+                            } else {
+                                currentRange.copy(endTime = newTime)
+                            }
+                            newList[rangeIndex] = updatedRange
+                            onUpdate(dayAvailability.copy(timeRanges = newList))
+                            showTimePickerForRangeIndex = null
+                        }) {
+                            Text("Conferma")
+                        }
+                    }
                 }
             }
         }
