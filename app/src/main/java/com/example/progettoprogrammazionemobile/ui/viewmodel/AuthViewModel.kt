@@ -41,13 +41,11 @@ class AuthViewModel : ViewModel() {
 
     fun checkCurrentUser() {
         val currentUser = auth.currentUser
-        if (currentUser != null) {
-            currentUser.reload().addOnCompleteListener {
-                if (currentUser.isEmailVerified) {
-                    fetchUserData(currentUser.uid)
-                } else {
-                    _authState.value = AuthState.Idle
-                }
+        currentUser?.reload()?.addOnCompleteListener {
+            if (currentUser.isEmailVerified) {
+                fetchUserData(currentUser.uid)
+            } else {
+                _authState.value = AuthState.Idle
             }
         }
     }
