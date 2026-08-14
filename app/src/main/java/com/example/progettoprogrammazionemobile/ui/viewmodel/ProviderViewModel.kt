@@ -8,6 +8,8 @@ import com.example.progettoprogrammazionemobile.data.model.Booking
 import com.example.progettoprogrammazionemobile.data.model.Review
 import com.example.progettoprogrammazionemobile.data.model.Service
 import com.example.progettoprogrammazionemobile.data.model.User
+import com.example.progettoprogrammazionemobile.data.model.ProviderAvailability
+import com.example.progettoprogrammazionemobile.data.model.DayAvailability
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
@@ -28,6 +30,9 @@ class ProviderViewModel : ViewModel() {
     private val _totalTurnover = mutableStateOf(0.0)
     val totalTurnover: State<Double> = _totalTurnover
     
+    private val _availability = mutableStateOf<ProviderAvailability?>(null)
+    val availability: State<ProviderAvailability?> = _availability
+
     private var currentUser: User? = null
 
     init {
@@ -40,6 +45,7 @@ class ProviderViewModel : ViewModel() {
             .addOnSuccessListener { doc ->
                 currentUser = doc.toObject(User::class.java)
                 fetchMyServices()
+                fetchMyAvailability()
             }
     }
 
@@ -80,8 +86,6 @@ class ProviderViewModel : ViewModel() {
     private fun fetchReviews(serviceIds: List<String>) {
         if (serviceIds.isEmpty()) return
         
-        // Firestore 'in' query supports up to 10 elements. For simplicity, we fetch all and filter, 
-        // or we could chunk if the number of services is high.
         db.collection("reviews")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
@@ -92,6 +96,27 @@ class ProviderViewModel : ViewModel() {
                     _reviews.addAll(allReviews.filter { serviceIds.contains(it.serviceId) })
                 }
             }
+    }
+
+    private fun fetchMyAvailability() {
+        val providerId = auth.currentUser?.uid ?: return
+        db.collection("availabilities").document(providerId)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null && snapshot.exists()) {
+                    _availability.value = snapshot.toObject(ProviderAvailability::class.java)
+                } else {
+                    val default = ProviderAvailability.getDefault(providerId)
+                    _availability.value = default
+                    // Non salviamo subito per evitare loop, lo stato locale basta finché l'utente non modifica
+                }
+            }
+    }
+
+    fun updateAvailability(newAvailability: ProviderAvailability) {
+        val providerId = auth.currentUser?.uid ?: return
+        // Aggiornamento ottimistico della UI
+        _availability.value = newAvailability
+        db.collection("availabilities").document(providerId).set(newAvailability)
     }
 
     fun updateBookingStatus(bookingId: String, newStatus: String) {
