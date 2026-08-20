@@ -144,8 +144,9 @@ class ClientViewModel : ViewModel() {
         val dayAvail = availability.weeklyAvailability.find { it.dayOfWeek == dayOfWeek }
         if (dayAvail == null || !dayAvail.workDay) return
 
+        // Interroghiamo TUTTE le prenotazioni del provider, non solo quelle di questo servizio
         db.collection("bookings")
-            .whereEqualTo("serviceId", service.id)
+            .whereEqualTo("providerId", service.providerId)
             .get()
             .addOnSuccessListener { snapshot ->
                 val existingBookings = snapshot.toObjects(Booking::class.java)
@@ -182,6 +183,7 @@ class ClientViewModel : ViewModel() {
                         val slotTime = timeSdf.format(startCal.time)
                         val slotDateTime = "$date $slotTime"
                         
+                        // Lo slot è occupato se esiste una qualsiasi prenotazione per questo provider a quest'ora
                         val isOccupied = existingBookings.any { it.date == slotDateTime }
                         if (!isOccupied) {
                             slots.add(slotTime)
@@ -201,6 +203,7 @@ class ClientViewModel : ViewModel() {
         val newBooking = Booking(
             id = bookingId,
             serviceId = service.id,
+            providerId = service.providerId, // Colleghiamo la prenotazione al professionista
             serviceName = service.name,
             clientId = clientId,
             date = date,
