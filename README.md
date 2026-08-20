@@ -37,9 +37,9 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 | :--- | :--- |:-----:|
 | **Working Hours** | Configurazione orari di apertura e durata slot per il Provider. |   ✅   |
 | **Slot Generation** | Generazione automatica degli slot liberi basata sull'orario. |   ✅    |
-| **Real-time Locking** | Impedire la prenotazione dello stesso slot a più utenti. |   ⏳   |
-| **Slot Release** | Liberazione automatica dello slot in caso di cancellazione. |   ⏳   |
-| **Booking UI** | Interfaccia a calendario per la scelta di giorni e ore disponibili. |   ⏳   |
+| **Real-time Locking** | Impedire la prenotazione dello stesso slot a più utenti. |   ✅   |
+| **Slot Release** | Liberazione automatica dello slot in caso di cancellazione. |   ✅   |
+| **Booking UI** | Interfaccia a calendario per la scelta di giorni e ore disponibili. |   ✅   |
 | **Status Flow** | Ciclo completo: Pending -> Confirmed -> Completed/Canceled. |   ✅   |
 
 ### 🔍 4. Ricerca & Discovery
