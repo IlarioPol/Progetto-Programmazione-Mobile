@@ -344,6 +344,7 @@ fun BookingDialog(
     onConfirm: (String) -> Unit
 ) {
     val availability by viewModel.selectedProviderAvailability
+    val locale = LocalConfiguration.current.locales[0]
     
     // Configura i giorni selezionabili e disabilita il passato
     val selectableDates = remember(availability) {
@@ -458,7 +459,7 @@ fun BookingDialog(
                 confirmButton = {
                     TextButton(onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                            val sdf = SimpleDateFormat("dd/MM/yyyy", locale)
                             val date = sdf.format(Date(millis))
                             selectedDateText = date
                             selectedSlot = null
