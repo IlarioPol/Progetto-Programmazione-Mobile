@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -364,6 +365,7 @@ fun DayAvailabilityItem(
 ) {
     var showTimePickerForRangeIndex by remember { mutableStateOf<Int?>(null) }
     var isStartTimePicker by remember { mutableStateOf(true) }
+    val locale = LocalConfiguration.current.locales[0]
 
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -473,7 +475,7 @@ fun DayAvailabilityItem(
                             Text("Annulla")
                         }
                         TextButton(onClick = {
-                            val newTime = String.format(Locale.getDefault(), "%02d:%02d", timePickerState.hour, timePickerState.minute)
+                            val newTime = String.format(locale, "%02d:%02d", timePickerState.hour, timePickerState.minute)
                             val newList = dayAvailability.timeRanges.toMutableList()
                             val updatedRange = if (isStartTimePicker) {
                                 currentRange.copy(startTime = newTime)
@@ -498,6 +500,7 @@ fun StatisticsTab(viewModel: ProviderViewModel) {
     val turnover by viewModel.totalTurnover
     val servicesCount = viewModel.services.size
     val completedCount = viewModel.incomingBookings.count { it.status == "Completed" }
+    val locale = LocalConfiguration.current.locales[0]
 
     Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Le Tue Statistiche", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -509,7 +512,7 @@ fun StatisticsTab(viewModel: ProviderViewModel) {
         ) {
             Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Fatturato Totale", style = MaterialTheme.typography.titleMedium)
-                Text("€${String.format(Locale.getDefault(), "%.2f", turnover)}", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
+                Text("€${String.format(locale, "%.2f", turnover)}", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
             }
         }
         
