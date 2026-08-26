@@ -13,48 +13,45 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 
 ---
 
-## 📈 Roadmap di Sviluppo
+## 📈 Roadmap di Sviluppo (Prossimi Step)
 
-### 🔐 1. Autenticazione & Sicurezza
+### 👑 1. Business Profile & Discovery (Alta Priorità)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Integrazione Firebase** | Collegamento reale a Firebase Auth e Firestore. | ✅ |
-| **Email Verification** | Invio link di verifica alla registrazione. | ✅ |
-| **Recupero Password** | Reset della password tramite link via email. | ✅ |
-| **Gestione Sessione** | Logout sicuro e persistenza utente. | ✅ |
-| **Sicurezza Profilo** | Modifica password ed eliminazione account. | ✅ |
+| **Business Page** | Pagina dedicata all'azienda con lista del team, galleria immagini e catalogo servizi completo. | ⏳ |
+| **Geolocalizzazione** | Ricerca delle attività basata sulla posizione GPS dell'utente e calcolo distanza. | ⏳ |
+| **Preferiti** | Possibilità per il cliente di salvare Aziende o Professionisti tra i preferiti. | 📅 |
 
-### 👑 2. Struttura Gerarchica & Business
+### 📊 2. Management & Analytics (Dashboard Manager)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Business Setup** | Creazione dell'entità Azienda (Nome, Macro-Categoria). | ✅ |
-| **Gestione Team** | Sistema di inviti/accettazione tra Manager e Provider. | ✅ |
-| **Binding Gerarchico** | Collegamento logico tra Servizi, Professionisti e Azienda. | ✅ |
-| **Business Page** | Pagina dedicata all'azienda con lista team e catalogo completo. | ⏳ |
+| **Analisi Fatturato** | Visualizzazione del fatturato totale, mensile e per singolo professionista con grafici. | ⏳ |
+| **Rating & Performance** | Statistiche sui feedback dei clienti, rating medio del team e dei singoli provider. | ⏳ |
+| **Trend Servizi** | Analisi dei servizi più richiesti e delle fasce orarie di maggior affluenza. | ⏳ |
+| **Esportazione Dati** | Generazione di report (CSV/PDF) per il riepilogo contabile e gestionale. | 📅 |
 
-### 📅 3. Sistema di Prenotazione Avanzato (Slots & Calendar)
-| Task | Descrizione | Stato |
-| :--- | :--- |:-----:|
-| **Working Hours** | Configurazione orari di apertura e durata slot per il Provider. |   ✅   |
-| **Slot Generation** | Generazione automatica degli slot liberi basata sull'orario. |   ✅    |
-| **Real-time Locking** | Impedire la prenotazione dello stesso slot a più utenti. |   ✅   |
-| **Slot Release** | Liberazione automatica dello slot in caso di cancellazione. |   ✅   |
-| **Booking UI** | Interfaccia a calendario per la scelta di giorni e ore disponibili. |   ✅   |
-| **Status Flow** | Ciclo completo: Pending -> Confirmed -> Completed/Canceled. |   ✅   |
-
-### 🔍 4. Ricerca & Discovery
+### 🔔 3. Comunicazione & Notifiche
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Filtri Categoria** | Navigazione per settori (Medicina, Beauty, ecc.). | ✅ |
-| **Cross-Entity Search** | Ricerca globale per Nome Azienda, Professionista o Servizio. | ✅ |
-| **Geolocalizzazione** | (Opzionale) Ricerca delle attività più vicine all'utente. | ⏳ |
+| **Cloud Messaging (FCM)** | Invio di notifiche push al cambio stato prenotazione (es. "Il professionista ha accettato"). | 📅 |
+| **Promemoria automatici** | Notifica automatica al cliente prima dell'appuntamento per ridurre i "no-show". | 📅 |
 
-### 📊 5. Analytics & Feedback
+### 💎 4. UX & Refactoring
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Recensioni** | Sistema di valutazione e commenti post-servizio. | ✅ |
-| **Provider Stats** | Monitoraggio guadagni e lavori fatti per singolo professionista. | ✅ |
-| **Manager Dashboard** | Statistiche aggregate dell'intero team e fatturato aziendale. | ⏳ |
+| **Dark Mode** | Ottimizzazione completa dei colori e degli asset per il supporto al tema scuro. | ⏳ |
+| **Skeleton Loaders** | Miglioramento della UX durante il caricamento asincrono dei dati da Firestore. | 📅 |
+
+---
+
+## ✅ Obiettivi Raggiunti
+- [x] **Autenticazione**: Integrazione Firebase Auth, verifica email e recupero password.
+- [x] **Gerarchia Business**: Sistema di inviti/accettazione tra Manager e Provider e binding aziendale.
+- [x] **Booking Core**: Generazione dinamica degli slot, gestione orari di lavoro e workflow stati.
+- [x] **Feedback & Stats**: Sistema di recensioni e statistiche base per il singolo Provider.
+- [x] **Ricerca & Discovery**: Filtri per categorie e ricerca globale (Azienda/Servizio).
+- [x] **Profilo Utente**: Modifica password, cancellazione account e gestione sessione sicura.
+- [x] **Fix Tecnici**: Risoluzione criticità KTX (Firebase BoM) e osservabilità del Locale nelle UI.
 
 ---
 
@@ -62,7 +59,6 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 
 ### 👤 Cliente (User)
 - Esplora per categorie o ricerca specifica.
-- Visualizza la **Business Page** per scegliere il professionista preferito.
 - Seleziona data e ora da un **calendario dinamico** di slot liberi.
 - Gestisce le cancellazioni e lascia feedback.
 
@@ -73,8 +69,8 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 
 ### 👑 Titolare (Manager)
 - Amministra la struttura e invita nuovi collaboratori.
-- Monitora le performance di ogni dipendente.
-- Visualizza i trend di fatturato e la soddisfazione clienti globale.
+- Monitora le performance di ogni dipendente (Fatturato, Rating).
+- Gestisce il profilo pubblico dell'azienda.
 
 ---
 
@@ -121,5 +117,3 @@ git push origin feature/nome-tua-funzionalita
 | **Manager** | `bzgpgvpqubeppqldrw@vtmpj.com` | `password123` |
 | **Provider** | `bkivqrltdlacxvlnej@onldm.net` | `password123` |
 | **Cliente** | `wanox64415@mypethealh.com` | `password123` |
-
----
