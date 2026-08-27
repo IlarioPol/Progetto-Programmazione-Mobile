@@ -115,5 +115,7 @@ git push origin feature/nome-tua-funzionalita
 | Ruolo | Email | Password |
 | :--- | :--- | :--- |
 | **Manager** | `bzgpgvpqubeppqldrw@vtmpj.com` | `password123` |
+| **Manager** | `gfd8c6@uqu.me` | `password123` |
 | **Provider** | `bkivqrltdlacxvlnej@onldm.net` | `password123` |
+| **Provider** | `a313ds@uqu.me` | `password123` |
 | **Cliente** | `wanox64415@mypethealh.com` | `password123` |
