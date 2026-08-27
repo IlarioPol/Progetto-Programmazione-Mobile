@@ -29,6 +29,9 @@ class AuthViewModel : ViewModel() {
     private val _authState = mutableStateOf<AuthState>(AuthState.Idle)
     val authState: State<AuthState> = _authState
 
+    private val _currentUser = mutableStateOf<User?>(null)
+    val currentUser: State<User?> = _currentUser
+
     private val _pendingInvitation = mutableStateOf<String?>(null)
     val pendingInvitation: State<String?> = _pendingInvitation
 
@@ -41,7 +44,13 @@ class AuthViewModel : ViewModel() {
 
     fun checkCurrentUser() {
         val currentUser = auth.currentUser
-        currentUser?.reload()?.addOnCompleteListener {
+        if (currentUser == null) {
+            _authState.value = AuthState.Idle
+            _currentUser.value = null
+            return
+        }
+        
+        currentUser.reload().addOnCompleteListener {
             if (currentUser.isEmailVerified) {
                 fetchUserData(currentUser.uid)
             } else {
@@ -173,7 +182,10 @@ class AuthViewModel : ViewModel() {
         db.collection("users").document(userId).delete()
             .addOnSuccessListener {
                 user.delete()
-                    .addOnSuccessListener { _authState.value = AuthState.AccountDeleted }
+                    .addOnSuccessListener { 
+                        _currentUser.value = null
+                        _authState.value = AuthState.AccountDeleted 
+                    }
                     .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione account Auth") }
             }
             .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione dati database") }
@@ -211,6 +223,7 @@ class AuthViewModel : ViewModel() {
         db.collection("users").document(uid).get()
             .addOnSuccessListener { document ->
                 document.toObject(User::class.java)?.let { user ->
+                    _currentUser.value = user
                     _authState.value = AuthState.Success(user)
                     user.businessId?.let { fetchBusinessData(it) }
                 }
@@ -222,6 +235,7 @@ class AuthViewModel : ViewModel() {
         db.collection("users").document(uid).get()
             .addOnSuccessListener { document ->
                 document.toObject(User::class.java)?.let { user ->
+                    _currentUser.value = user
                     _authState.value = AuthState.Success(user)
                     user.businessId?.let { fetchBusinessData(it) }
                     if (user.role == UserRole.PROVIDER && user.businessId == null) {
@@ -254,11 +268,18 @@ class AuthViewModel : ViewModel() {
 
     fun logout() {
         auth.signOut()
+        _currentUser.value = null
         _authState.value = AuthState.Idle
         _userBusiness.value = null
     }
     
     fun resetState() {
-        _authState.value = AuthState.Idle
+        // Ripristiniamo Success se abbiamo un utente, altrimenti Idle
+        val user = _currentUser.value
+        if (user != null) {
+            _authState.value = AuthState.Success(user)
+        } else {
+            _authState.value = AuthState.Idle
+        }
     }
 }

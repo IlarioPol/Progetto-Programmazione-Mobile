@@ -31,7 +31,7 @@ fun ProfileScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     
     val authState by viewModel.authState
-    val user = (authState as? AuthState.Success)?.user
+    val user by viewModel.currentUser
 
     LaunchedEffect(authState) {
         when (authState) {
@@ -113,9 +113,16 @@ fun ProfileScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Dati Account", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Nome: ${user?.name ?: "N/D"}")
-                    Text("Email: ${user?.email ?: "N/D"}")
-                    Text("Ruolo: ${user?.role?.name ?: "N/D"}")
+                    
+                    if (user != null) {
+                        Text("Nome: ${user?.name}")
+                        Text("Email: ${user?.email}")
+                        Text("Ruolo: ${user?.role?.name}")
+                    } else if (authState is AuthState.Loading) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    } else {
+                        Text("Impossibile caricare i dati dell'account.")
+                    }
                 }
             }
 
@@ -151,8 +158,11 @@ fun ProfileScreen(
                 )
             }
 
-            if (authState is AuthState.Loading) {
+            if (authState is AuthState.Loading && user != null) {
+                // Caricamento durante un'operazione (es. cambio password) ma i dati utente sono già presenti
                 CircularProgressIndicator()
+            } else if (authState is AuthState.Loading && user == null) {
+                // Caricamento iniziale gestito sopra nella card
             } else {
                 Button(
                     onClick = {
