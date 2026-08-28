@@ -204,7 +204,8 @@ class ClientViewModel : ViewModel() {
         val newBooking = Booking(
             id = bookingId,
             serviceId = service.id,
-            providerId = service.providerId, // Colleghiamo la prenotazione al professionista
+            providerId = service.providerId,
+            businessId = service.businessId, // Ora popoliamo il businessId per le statistiche del manager
             serviceName = service.name,
             clientId = clientId,
             date = date,
