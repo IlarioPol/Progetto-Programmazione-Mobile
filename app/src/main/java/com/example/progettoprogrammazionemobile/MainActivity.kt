@@ -18,6 +18,7 @@ import com.example.progettoprogrammazionemobile.data.model.UserRole
 import com.example.progettoprogrammazionemobile.ui.screens.auth.LoginScreen
 import com.example.progettoprogrammazionemobile.ui.screens.auth.RegisterScreen
 import com.example.progettoprogrammazionemobile.ui.screens.client.ClientHomeScreen
+import com.example.progettoprogrammazionemobile.ui.screens.client.BusinessDetailScreen
 import com.example.progettoprogrammazionemobile.ui.screens.manager.BusinessSetupScreen
 import com.example.progettoprogrammazionemobile.ui.screens.manager.ManagerHomeScreen
 import com.example.progettoprogrammazionemobile.ui.screens.profile.ProfileScreen
@@ -111,7 +112,23 @@ class MainActivity : ComponentActivity() {
                                         popUpTo(0)
                                     }
                                 },
-                                onProfileClick = { navController.navigate("profile") }
+                                onProfileClick = { navController.navigate("profile") },
+                                onBusinessClick = { businessId ->
+                                    navController.navigate("business_detail/$businessId")
+                                }
+                            )
+                        }
+                        composable("business_detail/{businessId}") { backStackEntry ->
+                            val businessId = backStackEntry.arguments?.getString("businessId") ?: ""
+                            BusinessDetailScreen(
+                                businessId = businessId,
+                                onBack = { navController.popBackStack() },
+                                onBookService = { service ->
+                                    // In un'app reale, potresti navigare a una schermata di prenotazione 
+                                    // o gestire il dialog. Per ora torniamo alla home e apriamo il dialog.
+                                    navController.popBackStack()
+                                    // Nota: per semplicità in questa demo, il booking dialog è gestito nella home.
+                                }
                             )
                         }
                         composable("provider_home") {
