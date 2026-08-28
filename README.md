@@ -25,9 +25,9 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 ### 📊 2. Management & Analytics (Dashboard Manager)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Analisi Fatturato** | Visualizzazione del fatturato totale, mensile e per singolo professionista con grafici. | ⏳ |
-| **Rating & Performance** | Statistiche sui feedback dei clienti, rating medio del team e dei singoli provider. | ⏳ |
-| **Trend Servizi** | Analisi dei servizi più richiesti e delle fasce orarie di maggior affluenza. | ⏳ |
+| **Analisi Fatturato** | Visualizzazione del fatturato totale, mensile e per singolo professionista con grafici. | ✅ |
+| **Rating & Performance** | Statistiche sui feedback dei clienti, rating medio del team e dei singoli provider. | ✅ |
+| **Trend Servizi** | Analisi dei servizi più richiesti e delle fasce orarie di maggior affluenza. | ✅ |
 | **Esportazione Dati** | Generazione di report (CSV/PDF) per il riepilogo contabile e gestionale. | 📅 |
 
 ### 🔔 3. Comunicazione & Notifiche
@@ -45,6 +45,7 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 ---
 
 ## ✅ Obiettivi Raggiunti
+- [x] **Dashboard Manager**: Implementata sezione statistiche con fatturato (totale/mensile), rating team e trend servizi.
 - [x] **Business Page**: Implementata pagina dettaglio azienda con team, gallery e servizi.
 - [x] **Autenticazione**: Integrazione Firebase Auth, verifica email e recupero password.
 - [x] **Gerarchia Business**: Sistema di inviti/accettazione tra Manager e Provider e binding aziendale.
