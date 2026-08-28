@@ -18,7 +18,7 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 ### 👑 1. Business Profile & Discovery (Alta Priorità)
 | Task | Descrizione | Stato |
 | :--- | :--- | :---: |
-| **Business Page** | Pagina dedicata all'azienda con lista del team, galleria immagini e catalogo servizi completo. | ⏳ |
+| **Business Page** | Pagina dedicata all'azienda con lista del team, galleria immagini e catalogo servizi completo. | ✅ |
 | **Geolocalizzazione** | Ricerca delle attività basata sulla posizione GPS dell'utente e calcolo distanza. | ⏳ |
 | **Preferiti** | Possibilità per il cliente di salvare Aziende o Professionisti tra i preferiti. | 📅 |
 
@@ -45,6 +45,7 @@ Applicazione Android moderna sviluppata con **Jetpack Compose** e **Firebase**, 
 ---
 
 ## ✅ Obiettivi Raggiunti
+- [x] **Business Page**: Implementata pagina dettaglio azienda con team, gallery e servizi.
 - [x] **Autenticazione**: Integrazione Firebase Auth, verifica email e recupero password.
 - [x] **Gerarchia Business**: Sistema di inviti/accettazione tra Manager e Provider e binding aziendale.
 - [x] **Booking Core**: Generazione dinamica degli slot, gestione orari di lavoro e workflow stati.

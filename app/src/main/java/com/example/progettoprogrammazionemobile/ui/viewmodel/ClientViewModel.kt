@@ -9,6 +9,7 @@ import com.example.progettoprogrammazionemobile.data.model.Business
 import com.example.progettoprogrammazionemobile.data.model.Review
 import com.example.progettoprogrammazionemobile.data.model.Service
 import com.example.progettoprogrammazionemobile.data.model.ProviderAvailability
+import com.example.progettoprogrammazionemobile.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
@@ -231,5 +232,15 @@ class ClientViewModel : ViewModel() {
             date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Calendar.getInstance().time)
         )
         db.collection("reviews").document(reviewId).set(newReview)
+    }
+
+    fun fetchTeamMembers(businessId: String, onResult: (List<User>) -> Unit) {
+        db.collection("users")
+            .whereEqualTo("businessId", businessId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val members = snapshot.toObjects(User::class.java)
+                onResult(members)
+            }
     }
 }
