@@ -7,5 +7,6 @@ data class Business(
     val description: String = "",
     val address: String = "",
     val managerId: String = "",
-    val providerIds: List<String> = emptyList()
+    val providerIds: List<String> = emptyList(),
+    val imageUrls: List<String> = emptyList() // Galleria immagini
 )

@@ -1,6 +1,7 @@
 package com.example.progettoprogrammazionemobile.ui.screens.client
 
 import android.content.res.Configuration
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -38,6 +39,7 @@ import java.util.*
 fun ClientHomeScreen(
     onLogout: () -> Unit,
     onProfileClick: () -> Unit,
+    onBusinessClick: (String) -> Unit,
     clientViewModel: ClientViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
@@ -81,7 +83,7 @@ fun ClientHomeScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                0 -> ExploreTab(clientViewModel) { selectedServiceForBooking = it }
+                0 -> ExploreTab(clientViewModel, onBusinessClick, { selectedServiceForBooking = it })
                 1 -> MyBookingsTab(clientViewModel) { bookingForReview = it }
             }
         }
@@ -113,7 +115,11 @@ fun ClientHomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExploreTab(viewModel: ClientViewModel, onBookClick: (Service) -> Unit) {
+fun ExploreTab(
+    viewModel: ClientViewModel, 
+    onBusinessClick: (String) -> Unit,
+    onBookClick: (Service) -> Unit
+) {
     val categories = listOf("Tutte", "Medicina", "Legal", "Beauty", "Ristorazione", "Istruzione", "Altro")
     val selectedCategory by viewModel.selectedCategory
     val searchQuery by viewModel.searchQuery
@@ -159,7 +165,7 @@ fun ExploreTab(viewModel: ClientViewModel, onBookClick: (Service) -> Unit) {
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 items(businesses) { business ->
-                    BusinessCard(business)
+                    BusinessCard(business, onClick = { onBusinessClick(business.id) })
                 }
                 item { Spacer(modifier = Modifier.height(24.dp)) }
             }
@@ -183,11 +189,12 @@ fun ExploreTab(viewModel: ClientViewModel, onBookClick: (Service) -> Unit) {
 }
 
 @Composable
-fun BusinessCard(business: Business) {
+fun BusinessCard(business: Business, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
