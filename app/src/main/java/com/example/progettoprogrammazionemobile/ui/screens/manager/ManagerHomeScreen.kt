@@ -1,25 +1,28 @@
 package com.example.progettoprogrammazionemobile.ui.screens.manager
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
 import com.example.progettoprogrammazionemobile.ui.viewmodel.ManagerViewModel
 import java.util.*
@@ -74,9 +77,15 @@ fun ManagerHomeScreen(
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
-                    label = { Text("Statistiche") },
+                    label = { Text("Stats") },
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Business, contentDescription = null) },
+                    label = { Text("Profilo") },
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 }
                 )
             }
         }
@@ -85,6 +94,7 @@ fun ManagerHomeScreen(
             when (selectedTab) {
                 0 -> TeamTab(managerViewModel, business)
                 1 -> StatsTab(managerViewModel)
+                2 -> BusinessProfileTab(managerViewModel, business)
             }
         }
     }
@@ -97,6 +107,108 @@ fun ManagerHomeScreen(
                 showInviteDialog = false
             }
         )
+    }
+}
+
+@Composable
+fun BusinessProfileTab(viewModel: ManagerViewModel, business: com.example.progettoprogrammazionemobile.data.model.Business?) {
+    if (business == null) return
+
+    var description by remember(business) { mutableStateOf(business.description) }
+    var address by remember(business) { mutableStateOf(business.address) }
+    val isUploading by viewModel.isUploading
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.uploadBusinessImage(business.id, it) }
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Text("Profilo Aziendale", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("Gestisci le informazioni visibili ai clienti", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
+
+        item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Dati Principali", fontWeight = FontWeight.Bold)
+                    Text("Nome: ${business.name}")
+                    Text("Categoria: ${business.category}")
+                    
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Descrizione") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3
+                    )
+                    
+                    OutlinedTextField(
+                        value = address,
+                        onValueChange = { address = it },
+                        label = { Text("Indirizzo") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    Button(
+                        onClick = { viewModel.updateBusinessInfo(business.id, description, address) },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Salva Modifiche")
+                    }
+                }
+            }
+        }
+
+        item {
+            Text("Galleria Immagini", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            if (isUploading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Button(onClick = { launcher.launch("image/*") }) {
+                Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Aggiungi Foto")
+            }
+        }
+
+        if (business.imageUrls.isEmpty()) {
+            item {
+                Text("Nessuna immagine caricata.", color = Color.Gray, modifier = Modifier.padding(vertical = 16.dp))
+            }
+        } else {
+            item {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(business.imageUrls) { imageUrl ->
+                        Box {
+                            AsyncImage(
+                                model = imageUrl,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(150.dp)
+                                    .clip(MaterialTheme.shapes.medium),
+                                contentScale = ContentScale.Crop
+                            )
+                            IconButton(
+                                onClick = { viewModel.deleteImage(business.id, imageUrl) },
+                                modifier = Modifier.align(Alignment.TopEnd)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = Color.Red)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
