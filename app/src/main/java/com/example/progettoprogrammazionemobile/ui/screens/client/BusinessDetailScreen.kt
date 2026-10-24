@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,10 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.progettoprogrammazionemobile.data.model.Business
 import com.example.progettoprogrammazionemobile.data.model.Service
@@ -31,20 +32,21 @@ import com.example.progettoprogrammazionemobile.ui.viewmodel.ClientViewModel
 fun BusinessDetailScreen(
     businessId: String,
     onBack: () -> Unit,
-    onBookService: (Service) -> Unit,
-    viewModel: ClientViewModel = viewModel()
+    viewModel: ClientViewModel
 ) {
+    // Get the locale in an observable way for Compose
+    val locale = LocalConfiguration.current.locales[0]
+    
     val businesses = viewModel.availableBusinesses
     val business = businesses.find { it.id == businessId }
     
     val allServices = viewModel.availableServices
     val businessServices = allServices.filter { it.businessId == businessId }
 
-    // State for team members
+    var selectedServiceForBooking by remember { mutableStateOf<Service?>(null) }
     var teamMembers by remember { mutableStateOf<List<User>>(emptyList()) }
     
     LaunchedEffect(businessId) {
-        // Fetch team members (users with businessId == businessId and role PROVIDER)
         viewModel.fetchTeamMembers(businessId) { members ->
             teamMembers = members
         }
@@ -74,7 +76,6 @@ fun BusinessDetailScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Galleria Immagini
                 if (business.imageUrls.isNotEmpty()) {
                     item {
                         Text("Galleria", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -94,7 +95,6 @@ fun BusinessDetailScreen(
                     }
                 }
 
-                // Descrizione e Info
                 item {
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -108,33 +108,49 @@ fun BusinessDetailScreen(
                     }
                 }
 
-                // Team
                 if (teamMembers.isNotEmpty()) {
                     item {
                         Text("Il Nostro Team", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                     items(teamMembers) { member ->
+                        val rating = viewModel.providerRatings[member.id] ?: 0.0
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(member.name, fontWeight = FontWeight.Medium)
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(member.name, fontWeight = FontWeight.Medium)
+                            
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = String.format(locale, "%.1f", rating),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Icon(
+                                    Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFB400),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
                         }
                     }
                 }
 
-                // Catalogo Servizi
                 item {
                     Text("Catalogo Servizi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
@@ -145,16 +161,31 @@ fun BusinessDetailScreen(
                     }
                 } else {
                     items(businessServices) { service ->
-                        ServiceCardDetail(service, onBookService)
+                        val providerName = viewModel.providerNames[service.providerId] ?: "Professionista"
+                        ServiceCardDetail(service, providerName) {
+                            selectedServiceForBooking = it
+                        }
                     }
                 }
             }
         }
     }
+
+    selectedServiceForBooking?.let { service ->
+        BookingDialog(
+            service = service,
+            viewModel = viewModel,
+            onDismiss = { selectedServiceForBooking = null },
+            onConfirm = { dateTime ->
+                viewModel.bookService(service, dateTime)
+                selectedServiceForBooking = null
+            }
+        )
+    }
 }
 
 @Composable
-fun ServiceCardDetail(service: Service, onBookClick: (Service) -> Unit) {
+fun ServiceCardDetail(service: Service, providerName: String, onBookClick: (Service) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -168,6 +199,7 @@ fun ServiceCardDetail(service: Service, onBookClick: (Service) -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(service.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Fornito da: $providerName", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
                 Text("€${service.price} • ${service.durationMinutes} min", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
             Button(onClick = { onBookClick(service) }) {

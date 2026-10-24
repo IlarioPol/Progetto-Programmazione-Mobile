@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -27,6 +28,7 @@ import com.example.progettoprogrammazionemobile.ui.screens.provider.ProviderHome
 import com.example.progettoprogrammazionemobile.ui.theme.ProgettoProgrammazioneMobileTheme
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthState
 import com.example.progettoprogrammazionemobile.ui.viewmodel.AuthViewModel
+import com.example.progettoprogrammazionemobile.ui.viewmodel.ClientViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,16 +40,13 @@ class MainActivity : ComponentActivity() {
                 val authViewModel: AuthViewModel = viewModel()
                 val authState by authViewModel.authState
                 
-                // Osserva la rotta corrente per la logica di redirezione
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
-                // Gestione centralizzata della navigazione basata sull'autenticazione
                 LaunchedEffect(authState, currentRoute) {
                     when (authState) {
                         is AuthState.Success -> {
                             val user = (authState as AuthState.Success).user
-                            // Se l'utente è loggato ma si trova su Login o Register, lo mandiamo alla Home corretta
                             if (currentRoute == "login" || currentRoute == "register") {
                                 val destination = when (user.role) {
                                     UserRole.CLIENT -> "client_home"
@@ -63,7 +62,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         is AuthState.Idle -> {
-                            // Se non siamo loggati e non siamo già su Login o Register, forziamo il ritorno al login
                             if (currentRoute != "login" && currentRoute != "register" && currentRoute != null) {
                                 navController.navigate("login") {
                                     popUpTo(0) { inclusive = true }
@@ -97,28 +95,34 @@ class MainActivity : ComponentActivity() {
                         composable("business_setup") {
                             BusinessSetupScreen(
                                 onSetupComplete = {
-                                    // Dopo il setup, forziamo un refresh dei dati utente per aggiornare il businessId
                                     authViewModel.checkCurrentUser()
                                 },
                                 viewModel = authViewModel
                             )
                         }
                         composable("client_home") {
+                            val clientViewModel: ClientViewModel = viewModel()
                             ClientHomeScreen(
                                 onLogout = { authViewModel.logout() },
                                 onProfileClick = { navController.navigate("profile") },
                                 onBusinessClick = { businessId ->
                                     navController.navigate("business_detail/$businessId")
                                 },
+                                clientViewModel = clientViewModel,
                                 authViewModel = authViewModel
                             )
                         }
                         composable("business_detail/{businessId}") { backStackEntry ->
                             val businessId = backStackEntry.arguments?.getString("businessId") ?: ""
+                            val clientHomeEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry("client_home")
+                            }
+                            val clientViewModel: ClientViewModel = viewModel(clientHomeEntry)
+                            
                             BusinessDetailScreen(
                                 businessId = businessId,
                                 onBack = { navController.popBackStack() },
-                                onBookService = { /* Gestito internamente */ }
+                                viewModel = clientViewModel
                             )
                         }
                         composable("provider_home") {
