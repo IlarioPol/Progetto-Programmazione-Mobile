@@ -41,11 +41,35 @@ class ProviderViewModel : ViewModel() {
 
     private fun fetchCurrentUserAndData() {
         val uid = auth.currentUser?.uid ?: return
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { doc ->
-                currentUser = doc.toObject(User::class.java)
+        // Ascoltiamo i cambiamenti dell'utente in tempo reale (es. quando il manager lo accetta nel business)
+        db.collection("users").document(uid).addSnapshotListener { doc, _ ->
+            if (doc != null && doc.exists()) {
+                val user = doc.toObject(User::class.java)
+                currentUser = user
+                
+                // Se il professionista è associato a un business, aggiorniamo i suoi servizi
+                user?.businessId?.let { bId ->
+                    updateServicesBusinessId(bId)
+                }
+                
                 fetchMyServices()
                 fetchMyAvailability()
+            }
+        }
+    }
+
+    private fun updateServicesBusinessId(businessId: String) {
+        val providerId = auth.currentUser?.uid ?: return
+        db.collection("services")
+            .whereEqualTo("providerId", providerId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                for (doc in snapshot.documents) {
+                    val currentBId = doc.getString("businessId")
+                    if (currentBId.isNullOrEmpty()) {
+                        doc.reference.update("businessId", businessId)
+                    }
+                }
             }
     }
 
@@ -87,13 +111,13 @@ class ProviderViewModel : ViewModel() {
         if (serviceIds.isEmpty()) return
         
         db.collection("reviews")
+            .whereIn("serviceId", serviceIds)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 
                 if (snapshot != null) {
-                    val allReviews = snapshot.toObjects(Review::class.java)
                     _reviews.clear()
-                    _reviews.addAll(allReviews.filter { serviceIds.contains(it.serviceId) })
+                    _reviews.addAll(snapshot.toObjects(Review::class.java))
                 }
             }
     }
@@ -107,14 +131,12 @@ class ProviderViewModel : ViewModel() {
                 } else {
                     val default = ProviderAvailability.getDefault(providerId)
                     _availability.value = default
-                    // Non salviamo subito per evitare loop, lo stato locale basta finché l'utente non modifica
                 }
             }
     }
 
     fun updateAvailability(newAvailability: ProviderAvailability) {
         val providerId = auth.currentUser?.uid ?: return
-        // Aggiornamento ottimistico della UI
         _availability.value = newAvailability
         db.collection("availabilities").document(providerId).set(newAvailability)
     }
