@@ -209,8 +209,23 @@ class AuthViewModel : ViewModel() {
             transaction.delete(inviteRef)
         }.addOnSuccessListener {
             _pendingInvitation.value = null
+            // Novità: Aggiorniamo i servizi del provider con il nuovo businessId
+            updateProviderServicesBusinessId(userId, businessId)
             fetchUserData(userId)
         }
+    }
+
+    private fun updateProviderServicesBusinessId(providerId: String, businessId: String) {
+        db.collection("services")
+            .whereEqualTo("providerId", providerId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val batch = db.batch()
+                for (doc in snapshot.documents) {
+                    batch.update(doc.reference, "businessId", businessId)
+                }
+                batch.commit()
+            }
     }
 
     fun declineInvitation() {
