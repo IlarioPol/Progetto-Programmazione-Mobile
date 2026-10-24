@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.progettoprogrammazionemobile.data.model.UserRole
 import com.example.progettoprogrammazionemobile.ui.screens.auth.LoginScreen
@@ -37,19 +38,39 @@ class MainActivity : ComponentActivity() {
                 val authViewModel: AuthViewModel = viewModel()
                 val authState by authViewModel.authState
                 
-                // Effettua il controllo automatico del business quando l'utente è loggato
-                LaunchedEffect(authState) {
-                    if (authState is AuthState.Success) {
-                        val user = (authState as AuthState.Success).user
-                        if (user.role == UserRole.MANAGER && user.businessId != null) {
-                            // Se siamo nella schermata di login o setup e abbiamo già un businessId, vai alla home
-                            val currentRoute = navController.currentDestination?.route
-                            if (currentRoute == "login" || currentRoute == "business_setup") {
-                                navController.navigate("manager_home") {
+                // Osserva la rotta corrente per la logica di redirezione
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+
+                // Gestione centralizzata della navigazione basata sull'autenticazione
+                LaunchedEffect(authState, currentRoute) {
+                    when (authState) {
+                        is AuthState.Success -> {
+                            val user = (authState as AuthState.Success).user
+                            // Se l'utente è loggato ma si trova su Login o Register, lo mandiamo alla Home corretta
+                            if (currentRoute == "login" || currentRoute == "register") {
+                                val destination = when (user.role) {
+                                    UserRole.CLIENT -> "client_home"
+                                    UserRole.PROVIDER -> "provider_home"
+                                    UserRole.MANAGER -> {
+                                        if (user.businessId == null) "business_setup"
+                                        else "manager_home"
+                                    }
+                                }
+                                navController.navigate(destination) {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            }
+                        }
+                        is AuthState.Idle -> {
+                            // Se non siamo loggati e non siamo già su Login o Register, forziamo il ritorno al login
+                            if (currentRoute != "login" && currentRoute != "register" && currentRoute != null) {
+                                navController.navigate("login") {
                                     popUpTo(0) { inclusive = true }
                                 }
                             }
                         }
+                        else -> {}
                     }
                 }
 
@@ -61,36 +82,14 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("login") {
                             LoginScreen(
-                                onLoginSuccess = { role ->
-                                    val user = (authViewModel.authState.value as? AuthState.Success)?.user
-                                    val destination = when (role) {
-                                        UserRole.CLIENT -> "client_home"
-                                        UserRole.PROVIDER -> "provider_home"
-                                        UserRole.MANAGER -> {
-                                            if (user?.businessId == null) "business_setup"
-                                            else "manager_home"
-                                        }
-                                    }
-                                    navController.navigate(destination) {
-                                        popUpTo("login") { inclusive = true }
-                                    }
-                                },
+                                onLoginSuccess = { /* Gestito da LaunchedEffect */ },
                                 onRegisterClick = { navController.navigate("register") },
                                 viewModel = authViewModel
                             )
                         }
                         composable("register") {
                             RegisterScreen(
-                                onRegisterSuccess = { role ->
-                                    val destination = when (role) {
-                                        UserRole.CLIENT -> "client_home"
-                                        UserRole.PROVIDER -> "provider_home"
-                                        UserRole.MANAGER -> "business_setup"
-                                    }
-                                    navController.navigate(destination) {
-                                        popUpTo("login") { inclusive = true }
-                                    }
-                                },
+                                onRegisterSuccess = { /* Gestito da LaunchedEffect */ },
                                 onLoginClick = { navController.popBackStack() },
                                 viewModel = authViewModel
                             )
@@ -98,24 +97,20 @@ class MainActivity : ComponentActivity() {
                         composable("business_setup") {
                             BusinessSetupScreen(
                                 onSetupComplete = {
-                                    navController.navigate("manager_home") {
-                                        popUpTo("business_setup") { inclusive = true }
-                                    }
+                                    // Dopo il setup, forziamo un refresh dei dati utente per aggiornare il businessId
+                                    authViewModel.checkCurrentUser()
                                 },
                                 viewModel = authViewModel
                             )
                         }
                         composable("client_home") {
                             ClientHomeScreen(
-                                onLogout = {
-                                    navController.navigate("login") {
-                                        popUpTo(0)
-                                    }
-                                },
+                                onLogout = { authViewModel.logout() },
                                 onProfileClick = { navController.navigate("profile") },
                                 onBusinessClick = { businessId ->
                                     navController.navigate("business_detail/$businessId")
-                                }
+                                },
+                                authViewModel = authViewModel
                             )
                         }
                         composable("business_detail/{businessId}") { backStackEntry ->
@@ -123,42 +118,27 @@ class MainActivity : ComponentActivity() {
                             BusinessDetailScreen(
                                 businessId = businessId,
                                 onBack = { navController.popBackStack() },
-                                onBookService = { service ->
-                                    // In un'app reale, potresti navigare a una schermata di prenotazione 
-                                    // o gestire il dialog. Per ora torniamo alla home e apriamo il dialog.
-                                    navController.popBackStack()
-                                    // Nota: per semplicità in questa demo, il booking dialog è gestito nella home.
-                                }
+                                onBookService = { /* Gestito internamente */ }
                             )
                         }
                         composable("provider_home") {
                             ProviderHomeScreen(
-                                onLogout = {
-                                    navController.navigate("login") {
-                                        popUpTo(0)
-                                    }
-                                },
-                                onProfileClick = { navController.navigate("profile") }
+                                onLogout = { authViewModel.logout() },
+                                onProfileClick = { navController.navigate("profile") },
+                                authViewModel = authViewModel
                             )
                         }
                         composable("manager_home") {
                             ManagerHomeScreen(
-                                onLogout = {
-                                    navController.navigate("login") {
-                                        popUpTo(0)
-                                    }
-                                },
-                                onProfileClick = { navController.navigate("profile") }
+                                onLogout = { authViewModel.logout() },
+                                onProfileClick = { navController.navigate("profile") },
+                                authViewModel = authViewModel
                             )
                         }
                         composable("profile") {
                             ProfileScreen(
                                 onBack = { navController.popBackStack() },
-                                onAccountDeleted = {
-                                    navController.navigate("login") {
-                                        popUpTo(0) { inclusive = true }
-                                    }
-                                },
+                                onAccountDeleted = { authViewModel.logout() },
                                 viewModel = authViewModel
                             )
                         }
