@@ -2,7 +2,6 @@ package com.example.progettoprogrammazionemobile.ui.viewmodel
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.progettoprogrammazionemobile.data.model.Booking
@@ -43,25 +42,10 @@ class ClientViewModel : ViewModel() {
     private val _availableSlots = mutableStateListOf<String>()
     val availableSlots: List<String> = _availableSlots
 
-    // Mapping per nomi e rating dei provider
-    val providerNames = mutableStateMapOf<String, String>()
-    val providerRatings = mutableStateMapOf<String, Double>()
-
     init {
         fetchAllBusinesses()
         fetchAllServices()
         fetchMyBookings()
-        fetchAllProviderNames()
-    }
-
-    private fun fetchAllProviderNames() {
-        db.collection("users")
-            .whereEqualTo("role", "PROVIDER")
-            .addSnapshotListener { snapshot, _ ->
-                snapshot?.toObjects(User::class.java)?.forEach { user ->
-                    providerNames[user.id] = user.name
-                }
-            }
     }
 
     private fun fetchAllBusinesses() {
@@ -80,38 +64,10 @@ class ClientViewModel : ViewModel() {
             .addSnapshotListener { snapshot, _ ->
                 if (snapshot != null) {
                     _allServices.clear()
-                    val services = snapshot.toObjects(Service::class.java)
-                    _allServices.addAll(services)
+                    _allServices.addAll(snapshot.toObjects(Service::class.java))
                     applyFilters()
-                    // Una volta caricati i servizi, calcoliamo i rating per i provider coinvolti
-                    fetchRatingsForProviders(services.map { it.providerId }.distinct())
                 }
             }
-    }
-
-    private fun fetchRatingsForProviders(providerIds: List<String>) {
-        if (providerIds.isEmpty()) return
-        
-        providerIds.forEach { providerId ->
-            // Cerchiamo tutti i servizi di questo provider
-            db.collection("services")
-                .whereEqualTo("providerId", providerId)
-                .get()
-                .addOnSuccessListener { sSnapshot ->
-                    val sIds = sSnapshot.documents.map { it.id }
-                    if (sIds.isNotEmpty()) {
-                        db.collection("reviews")
-                            .whereIn("serviceId", sIds)
-                            .addSnapshotListener { rSnapshot, _ ->
-                                val reviews = rSnapshot?.toObjects(Review::class.java) ?: emptyList()
-                                val avg = if (reviews.isNotEmpty()) reviews.map { it.rating }.average() else 0.0
-                                providerRatings[providerId] = avg
-                            }
-                    } else {
-                        providerRatings[providerId] = 0.0
-                    }
-                }
-        }
     }
 
     fun onSearchQueryChange(newQuery: String) {
@@ -139,14 +95,10 @@ class ClientViewModel : ViewModel() {
 
         availableServices.clear()
         availableServices.addAll(_allServices.filter { service ->
-            val business = _allBusinesses.find { 
-                it.id == service.businessId || it.providerIds.contains(service.providerId) 
-            }
-            
+            val business = _allBusinesses.find { it.id == service.businessId }
             val matchesCat = cat == "Tutte" || (business != null && business.category == cat)
             val matchesQuery = service.name.lowercase().contains(query) || 
                              (business != null && business.name.lowercase().contains(query))
-            
             matchesCat && matchesQuery
         })
     }
@@ -193,6 +145,7 @@ class ClientViewModel : ViewModel() {
         val dayAvail = availability.weeklyAvailability.find { it.dayOfWeek == dayOfWeek }
         if (dayAvail == null || !dayAvail.workDay) return
 
+        // Interroghiamo TUTTE le prenotazioni del provider, non solo quelle di questo servizio
         db.collection("bookings")
             .whereEqualTo("providerId", service.providerId)
             .get()
@@ -231,6 +184,7 @@ class ClientViewModel : ViewModel() {
                         val slotTime = timeSdf.format(startCal.time)
                         val slotDateTime = "$date $slotTime"
                         
+                        // Lo slot è occupato se esiste una qualsiasi prenotazione per questo provider a quest'ora
                         val isOccupied = existingBookings.any { it.date == slotDateTime }
                         if (!isOccupied) {
                             slots.add(slotTime)
@@ -247,14 +201,11 @@ class ClientViewModel : ViewModel() {
     fun bookService(service: Service, date: String) {
         val clientId = auth.currentUser?.uid ?: return
         val bookingId = UUID.randomUUID().toString()
-        
-        val business = _allBusinesses.find { it.id == service.businessId || it.providerIds.contains(service.providerId) }
-
         val newBooking = Booking(
             id = bookingId,
             serviceId = service.id,
             providerId = service.providerId,
-            businessId = business?.id ?: service.businessId,
+            businessId = service.businessId, // Ora popoliamo il businessId per le statistiche del manager
             serviceName = service.name,
             clientId = clientId,
             date = date,
