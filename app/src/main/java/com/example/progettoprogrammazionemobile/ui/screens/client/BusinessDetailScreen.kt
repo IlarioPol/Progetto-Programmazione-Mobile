@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.progettoprogrammazionemobile.data.model.Business
 import com.example.progettoprogrammazionemobile.data.model.Service
 import com.example.progettoprogrammazionemobile.data.model.User
 import com.example.progettoprogrammazionemobile.ui.viewmodel.ClientViewModel
@@ -103,7 +102,6 @@ fun BusinessDetailScreen(
                             Text(business.description)
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Indirizzo: ${business.address}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                            Text("Categoria: ${business.category}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -155,16 +153,10 @@ fun BusinessDetailScreen(
                     Text("Catalogo Servizi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 
-                if (businessServices.isEmpty()) {
-                    item {
-                        Text("Nessun servizio disponibile al momento.", color = Color.Gray)
-                    }
-                } else {
-                    items(businessServices) { service ->
-                        val providerName = viewModel.providerNames[service.providerId] ?: "Professionista"
-                        ServiceCardDetail(service, providerName) {
-                            selectedServiceForBooking = it
-                        }
+                items(businessServices) { service ->
+                    val providerName = viewModel.providerNames[service.providerId] ?: "Professionista"
+                    ServiceCardDetail(service, providerName) {
+                        selectedServiceForBooking = it
                     }
                 }
             }
