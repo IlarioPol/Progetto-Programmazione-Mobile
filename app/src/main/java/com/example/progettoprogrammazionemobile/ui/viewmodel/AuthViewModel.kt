@@ -10,6 +10,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
 
+/**
+ * Rappresenta i possibili stati dell'autenticazione.
+ * Utilizzato dalla UI per mostrare caricamenti, errori o navigare dopo il successo.
+ */
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
@@ -23,9 +27,15 @@ sealed class AuthState {
 }
 
 class AuthViewModel : ViewModel() {
+    // =================================================================================
+    // ISTANZE FIREBASE
+    // =================================================================================
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 
+    // =================================================================================
+    // STATI OSSERVABILI (UI STATE)
+    // =================================================================================
     private val _authState = mutableStateOf<AuthState>(AuthState.Idle)
     val authState: State<AuthState> = _authState
 
@@ -42,6 +52,14 @@ class AuthViewModel : ViewModel() {
         checkCurrentUser()
     }
 
+    // =================================================================================
+    // 1. LOGICA DI AUTENTICAZIONE (LOGIN, LOGOUT, CHECK SESSIONE)
+    // =================================================================================
+
+    /**
+     * Controlla se esiste una sessione attiva al lancio dell'app.
+     * Se l'email è verificata, carica i dati dell'utente.
+     */
     fun checkCurrentUser() {
         val currentUser = auth.currentUser
         if (currentUser == null) {
@@ -59,6 +77,10 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Gestisce l'accesso con Email e Password.
+     * Richiede che l'email sia stata verificata.
+     */
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
             _authState.value = AuthState.Error("Per favore compila tutti i campi")
@@ -81,6 +103,24 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    /**
+     * Effettua il logout pulendo lo stato locale.
+     */
+    fun logout() {
+        auth.signOut()
+        _currentUser.value = null
+        _authState.value = AuthState.Idle
+        _userBusiness.value = null
+    }
+
+    // =================================================================================
+    // 2. GESTIONE ACCOUNT (REGISTRAZIONE, RESET, ELIMINAZIONE)
+    // =================================================================================
+
+    /**
+     * Crea un nuovo account Firebase Auth e un profilo utente in Firestore.
+     * Invia automaticamente l'email di verifica.
+     */
     fun register(name: String, email: String, password: String, confirmPassword: String, role: UserRole) {
         if (name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
             _authState.value = AuthState.Error("Per favore compila tutti i campi")
@@ -130,6 +170,48 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    fun updatePassword(newPassword: String) {
+        if (newPassword.length < 6) {
+            _authState.value = AuthState.Error("La password deve essere di almeno 6 caratteri")
+            return
+        }
+        _authState.value = AuthState.Loading
+        auth.currentUser?.updatePassword(newPassword)
+            ?.addOnSuccessListener {
+                _authState.value = AuthState.PasswordUpdated
+            }
+            ?.addOnFailureListener { exception ->
+                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore aggiornamento password")
+            }
+    }
+
+    /**
+     * Elimina i dati utente da Firestore e l'account da Firebase Auth.
+     */
+    fun deleteAccount() {
+        val user = auth.currentUser ?: return
+        val userId = user.uid
+        _authState.value = AuthState.Loading
+        
+        db.collection("users").document(userId).delete()
+            .addOnSuccessListener {
+                user.delete()
+                    .addOnSuccessListener { 
+                        _currentUser.value = null
+                        _authState.value = AuthState.AccountDeleted 
+                    }
+                    .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione account Auth") }
+            }
+            .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione dati database") }
+    }
+
+    // =================================================================================
+    // 3. GESTIONE BUSINESS (SOLO PER MANAGER)
+    // =================================================================================
+
+    /**
+     * Crea un'azienda nel database e la collega al profilo del Manager.
+     */
     fun createBusiness(name: String, category: String, description: String, address: String) {
         val managerId = auth.currentUser?.uid ?: return
         _authState.value = AuthState.Loading
@@ -159,38 +241,14 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    fun updatePassword(newPassword: String) {
-        if (newPassword.length < 6) {
-            _authState.value = AuthState.Error("La password deve essere di almeno 6 caratteri")
-            return
-        }
-        _authState.value = AuthState.Loading
-        auth.currentUser?.updatePassword(newPassword)
-            ?.addOnSuccessListener {
-                _authState.value = AuthState.PasswordUpdated
-            }
-            ?.addOnFailureListener { exception ->
-                _authState.value = AuthState.Error(exception.localizedMessage ?: "Errore aggiornamento password")
-            }
-    }
+    // =================================================================================
+    // 4. GESTIONE INVITI (SOLO PER PROVIDER)
+    // =================================================================================
 
-    fun deleteAccount() {
-        val user = auth.currentUser ?: return
-        val userId = user.uid
-        _authState.value = AuthState.Loading
-        
-        db.collection("users").document(userId).delete()
-            .addOnSuccessListener {
-                user.delete()
-                    .addOnSuccessListener { 
-                        _currentUser.value = null
-                        _authState.value = AuthState.AccountDeleted 
-                    }
-                    .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione account Auth") }
-            }
-            .addOnFailureListener { _authState.value = AuthState.Error("Errore eliminazione dati database") }
-    }
-
+    /**
+     * Accetta un invito di un Manager. Collega il Provider all'azienda e
+     * aggiorna retroattivamente i suoi servizi.
+     */
     fun acceptInvitation() {
         val businessId = _pendingInvitation.value ?: return
         val userId = auth.currentUser?.uid ?: return
@@ -209,7 +267,7 @@ class AuthViewModel : ViewModel() {
             transaction.delete(inviteRef)
         }.addOnSuccessListener {
             _pendingInvitation.value = null
-            // Novità: Aggiorniamo i servizi del provider con il nuovo businessId
+            // Aggiorniamo i servizi del provider con il nuovo businessId per le statistiche
             updateProviderServicesBusinessId(userId, businessId)
             fetchUserData(userId)
         }
@@ -234,6 +292,10 @@ class AuthViewModel : ViewModel() {
         _pendingInvitation.value = null
     }
 
+    // =================================================================================
+    // 5. HELPER DI SINCRONIZZAZIONE DATI
+    // =================================================================================
+
     private fun refreshUserDataSilent(uid: String) {
         db.collection("users").document(uid).get()
             .addOnSuccessListener { document ->
@@ -245,6 +307,9 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    /**
+     * Recupera l'intero profilo utente e le info aziendali associate.
+     */
     private fun fetchUserData(uid: String) {
         _authState.value = AuthState.Loading
         db.collection("users").document(uid).get()
@@ -280,16 +345,11 @@ class AuthViewModel : ViewModel() {
                 }
             }
     }
-
-    fun logout() {
-        auth.signOut()
-        _currentUser.value = null
-        _authState.value = AuthState.Idle
-        _userBusiness.value = null
-    }
     
+    /**
+     * Ripristina lo stato dell'UI dopo un'operazione o un errore.
+     */
     fun resetState() {
-        // Ripristiniamo Success se abbiamo un utente, altrimenti Idle
         val user = _currentUser.value
         if (user != null) {
             _authState.value = AuthState.Success(user)

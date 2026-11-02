@@ -83,6 +83,7 @@ class ClientViewModel : ViewModel() {
                     val services = snapshot.toObjects(Service::class.java)
                     _allServices.addAll(services)
                     applyFilters()
+                    // Una volta caricati i servizi, calcoliamo i rating per i provider coinvolti
                     fetchRatingsForProviders(services.map { it.providerId }.distinct())
                 }
             }
@@ -92,6 +93,7 @@ class ClientViewModel : ViewModel() {
         if (providerIds.isEmpty()) return
         
         providerIds.forEach { providerId ->
+            // Cerchiamo tutti i servizi di questo provider
             db.collection("services")
                 .whereEqualTo("providerId", providerId)
                 .get()
@@ -137,12 +139,15 @@ class ClientViewModel : ViewModel() {
 
         availableServices.clear()
         availableServices.addAll(_allServices.filter { service ->
-            val business = _allBusinesses.find { 
+            // Cerchiamo il business associato, provando anche tramite providerId se businessId è vuoto
+            val business = _allBusinesses.find {
                 it.id == service.businessId || it.providerIds.contains(service.providerId) 
             }
+
             val matchesCat = cat == "Tutte" || (business != null && business.category == cat)
             val matchesQuery = service.name.lowercase().contains(query) || 
                              (business != null && business.name.lowercase().contains(query))
+
             matchesCat && matchesQuery
         })
     }
@@ -189,6 +194,7 @@ class ClientViewModel : ViewModel() {
         val dayAvail = availability.weeklyAvailability.find { it.dayOfWeek == dayOfWeek }
         if (dayAvail == null || !dayAvail.workDay) return
 
+        // Interroghiamo TUTTE le prenotazioni del provider, non solo quelle di questo servizio
         db.collection("bookings")
             .whereEqualTo("providerId", service.providerId)
             .get()
@@ -227,6 +233,7 @@ class ClientViewModel : ViewModel() {
                         val slotTime = timeSdf.format(startCal.time)
                         val slotDateTime = "$date $slotTime"
                         
+                        // Lo slot è occupato se esiste una qualsiasi prenotazione per questo provider a quest'ora
                         val isOccupied = existingBookings.any { it.date == slotDateTime }
                         if (!isOccupied) {
                             slots.add(slotTime)
@@ -243,6 +250,8 @@ class ClientViewModel : ViewModel() {
     fun bookService(service: Service, date: String) {
         val clientId = auth.currentUser?.uid ?: return
         val bookingId = UUID.randomUUID().toString()
+
+        // Assicuriamoci di risalire al businessId corretto anche se il servizio ha il campo vuoto
         val business = _allBusinesses.find { it.id == service.businessId || it.providerIds.contains(service.providerId) }
 
         val newBooking = Booking(
